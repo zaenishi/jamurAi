@@ -14,12 +14,12 @@ export const CONFIG = {
   },
 
   CREATOR: {
-    name: 'zaenishi',
-    bio: 'Pembuat Si Jamur. Suka membangun AI, game, dan alat kecil yang berguna.',
+    name: 'zaenishi - Pengembang Utama',
+    bio: `Hai! aku zaenishi, dengan nama lengkap "jaenar mohasan zaki" pengembang utama MyraAi!`,
     links: [
-      { label: 'Instagram', url: 'https://instagram.com/znarss_' }, // pastikan username benar
-      // { label: 'TikTok', url: 'https://tiktok.com/@zaenishi' },
-      // { label: 'GitHub', url: 'https://github.com/zaenishi' },
+      { label: 'Instagram', url: 'https://instagram.com/znarss_' },
+      { label: 'LinkedIn', url: 'https://www.linkedin.com/zaenishi/' },
+      { label: 'GitHub', url: 'https://github.com/zaenishi' }
     ],
   },
 
