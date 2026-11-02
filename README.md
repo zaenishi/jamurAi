@@ -1,74 +1,46 @@
-# Si Jamur — Web AI Workspace
+# Si Jamur v5 — AI Web App (Vercel)
 
-Upgrade frontend untuk aplikasi Si Jamur, dengan server Node.js yang tetap menggunakan provider dan persona dari proyek awal.
+Hasil rombak Si Jamur v4 (Node.js CLI) menjadi web app: frontend statis + Vercel Serverless Functions.
 
-## Fitur
-
-- Responsive dark glass UI untuk ponsel, tablet, desktop, dan layar lebar.
-- Chat AI, analisis gambar (PNG/JPEG/WEBP), dan mode generate gambar.
-- Markdown/GFM renderer dengan sanitasi HTML, code block + syntax highlighting + tombol salin.
-- Callout `[ALERT]` / `⚠️`, `[SUCCESS]` / `✅`, dan `[INFO]` / `💡`.
-- Typing effect, status online/thinking/listening, dan loading indicator.
-- Speech-to-text dan Mode Telepon berbasis Web Speech API browser.
-- Text-to-speech membersihkan Markdown, label status, URL, dan blok kode sebelum dibacakan.
-- Security headers, validasi input, rate limit proses, pembatasan file, dan pemeriksaan path.
-
-## Menjalankan lokal
-
-Persyaratan: Node.js 18 atau lebih baru.
-
-```bash
-npm start
+## Struktur
+```
+public/
+  index.html            Landing + chat + layar telepon
+  config.js             Konfigurasi modular (USE_FIREBASE, creator, batas, suara, keamanan)
+  css/style.css         Tema hutan malam
+  js/app.js             UI, chat, upload, cooldown, mode call
+  js/mushroom.js        Character engine (SVG, ekspresi, kedip, lip-sync)
+  js/parser.js          Markdown/[ALERT]/[SUCCESS]/kode → HTML aman + filter suara
+  js/voice.js           Speech-to-Text & Text-to-Speech
+  js/store.js           Cache browser (LocalStorage/IndexedDB) ⇄ Firebase
+  js/security.js        Anti-inspect (deterrent)
+api/
+  chat.js               POST /api/chat, GET /api/chat (status)
+  upload.js             POST /api/upload (1 gambar)
+  _lib/                 http.js, persona.js, kmsr.js, carpathian.js (tidak jadi route)
+vercel.json             Header keamanan + CSP
 ```
 
-Buka `http://localhost:3000`.
+## Deploy
+1. `npm i -g vercel` lalu `vercel` di folder ini (atau import repo di dashboard Vercel).
+2. Set Environment Variable **`SESSION_SECRET`** (string acak ≥ 32 karakter). Wajib untuk upload gambar.
+3. Opsional: `PROVIDERS`, `CARPATHIAN_MODEL`, `CARPATHIAN_UPLOAD_PATH`, `KMSR_USER_ID`, `KMSR_TIMEOUT_MS`, `CARPATHIAN_TIMEOUT_MS`, `ATTEMPTS`, `DEBUG` (lihat `.env.example`).
+4. Uji lokal: `vercel dev`.
 
-Tidak ada API key yang perlu ditaruh di HTML atau JavaScript browser. Jika provider tertentu membutuhkan key, simpan sebagai environment variable server di dashboard deployment, bukan di file `public/` atau bundle frontend.
-
-## Environment
-
-| Variable | Kegunaan | Default |
-|---|---|---|
-| `PORT` | Port HTTP | `3000` |
-| `DOWNLOAD_DIR` | Folder hasil gambar/unduhan | `./downloads` |
-| `DEBUG` | Debug flag yang sudah tersedia di server | off |
-| `ATTEMPTS` | Jumlah percobaan provider | `3` |
-| `PERSONA_STRICT` | Persona guard | `true` |
-| `AIHORDE_API_KEY` | Key server untuk fallback provider gambar | public/anonymous fallback |
-
-## Endpoint
-
-- `GET /api/health` — status layanan.
-- `POST /api/chat` — `{ "message": "...", "history": [] }`.
-- `POST /api/vision` — `{ "message": "...", "history": [], "images": [{ "data": "base64", "mimeType": "image/jpeg", "filename": "image.jpg" }] }`.
-- `POST /api/generate` — `{ "prompt": "..." }`.
-
-## Keamanan dan batasan deployment
-
-1. API provider dipanggil oleh `server.js`; frontend hanya memanggil endpoint `/api/*`. Jangan pernah menaruh secret di `public/`, HTML, localStorage, atau variabel `VITE_*`/`NEXT_PUBLIC_*`.
-2. Server menambahkan `nosniff`, `DENY` frame, referrer policy, permissions policy, CORP, dan CSP yang mengizinkan CDN UI yang digunakan.
-3. CORS wildcard dihapus. Aplikasi dirancang same-origin; jangan membuka API ke origin lain tanpa allowlist dan autentikasi.
-4. Rate limiter bawaan berada di memori proses. Untuk deployment multi-instance/serverless, ganti dengan Redis/KV rate limiter dan tambahkan autentikasi/session, kuota per akun, serta proteksi bot.
-5. CSP masih mengizinkan inline script/style karena frontend awal disatukan dalam satu HTML. Untuk CSP lebih ketat, pindahkan CSS/JS ke file terpisah dan gunakan nonce/hash.
-6. Speech recognition dan speech synthesis bergantung pada dukungan browser, izin mikrofon, serta voice yang terpasang. Beberapa browser hanya mengaktifkan SpeechRecognition pada HTTPS/localhost.
-7. Disable klik kanan, memblokir DevTools, debugger loop, dan console cleanser sengaja tidak diterapkan. Itu bukan kontrol keamanan yang dapat diandalkan dan dapat merusak aksesibilitas/debugging. Kode frontend yang dikirim ke browser selalu dapat diperiksa.
-8. Jangan anggap API key provider tersembunyi dari pengguna jika provider pihak ketiga mengembalikan URL/token sensitif. Semua operasi sensitif harus divalidasi di server.
-
-## Catatan arsitektur
-
-```text
-Browser (UI + Markdown renderer + Voice APIs)
-              │ same-origin /api/*
-              ▼
-Node HTTP server (validation, limits, security headers)
-              │
-              ├── Provider chat chain
-              ├── Provider vision
-              └── Image generation → downloads/
+## Pindah ke Firebase
+Di `public/config.js`: isi `firebase`, set `USE_FIREBASE: true`. Aktifkan Authentication (Anonymous atau Google) dan Firestore.
+Rules minimal Firestore:
 ```
+match /users/{uid} { allow read, write: if request.auth != null && request.auth.uid == uid; }
+```
+Jika Firebase gagal dimuat, app otomatis kembali ke cache browser.
 
-Markdown diparse ke DOM, lalu disanitasi dengan DOMPurify sebelum ditampilkan. Syntax highlighting hanya diterapkan pada elemen `pre > code`. Tombol copy menyalin `textContent`, bukan HTML. Konten suara dibuat terpisah melalui `cleanForSpeech()` sehingga simbol Markdown, status, tautan, dan blok kode tidak dibacakan mentah.
-
-## Deploy ke Vercel
-
-Proyek ini mendukung deployment GitHub melalui Vercel. Pastikan `vercel.json`, folder `api/`, `server.js`, dan `public/` berada di root repository. Lihat [VERCEL-DEPLOY.md](./VERCEL-DEPLOY.md) untuk langkah deployment, environment variables, dan batasan serverless.
+## Catatan penting
+- **Batas 4,5 MB body Vercel**: gambar maks 20 MB boleh dipilih, tetapi dikompres di browser ke ≤ ~3 MB sebelum dikirim.
+- **Upload stateless**: `/api/upload` membuat sesi Carpathian lalu menyegelnya (AES-256-GCM, kedaluwarsa 10 menit) menjadi token; `/api/chat` membukanya. Cookie/CSRF tidak pernah sampai ke client.
+- **Timeout**: `maxDuration` diset 60 dtk (batas aman Hobby). KMSR di Render bisa cold-start; di plan Pro/Fluid naikkan di `vercel.json` dan `*_TIMEOUT_MS`.
+- **Rate limit** server bersifat in-memory per instance (best effort). Untuk yang ketat pakai Upstash/Vercel KV.
+- **Anti-inspect hanya deterrent.** Perlindungan nyata: key/endpoint tidak ada di client, request dibatasi same-origin, CSP aktif. Pada localhost fitur ini nonaktif.
+- **Dihapus dari v4**: image generation (Pollinations/AI Horde) dan auto-download dokumen (butuh disk). Bisa ditambah sebagai `api/image.js` jika diperlukan.
+- **Link Instagram** di `config.js` memakai `instagram.com/zaenishi` — pastikan username benar.
+- Mode call: Chrome/Edge paling stabil; iOS Safari tidak mendukung fullscreen API pada elemen (layar tetap menutup penuh).

@@ -1,14 +1,8 @@
 {
   "name": "si-jamur",
-  "version": "4.0.0",
+  "version": "5.0.0",
+  "private": true,
   "type": "module",
-  "main": "server.js",
-    "scripts": {
-      "start": "node server.js",
-      "dev": "node server.js",
-      "cli": "node cli.js"
-    },
-  "engines": {
-    "node": ">=20"
-  }
+  "description": "Si Jamur — AI web app bertema jamur, ciptaan zaenishi. Siap deploy ke Vercel.",
+  "engines": { "node": ">=18" }
 }
