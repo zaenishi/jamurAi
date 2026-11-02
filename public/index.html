@@ -3,14 +3,131 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>MyraAi — teman ngobrol AI</title>
-  <meta name="description" content="Myra Ai: asisten AI ramah ciptaan zaenishi. Ketik, kirim gambar, buat gambar, atau telepon langsung.">
+
+  <!-- ═══ PRIMARY SEO ═══ -->
+  <title>MyraAi — Teman Ngobrol AI</title>
+  <meta name="title" content="MyraAi — Teman Ngobrol AI">
+  <meta name="description" content="Myra adalah asisten AI ramah berbahasa Indonesia: ngobrol, belajar, coding, analisis gambar, buat gambar, sampai telepon suara. Gratis, tanpa daftar.">
+  <meta name="keywords" content="AI Indonesia, asisten AI, chatbot Indonesia, Myra AI, zaenishi, AI gratis, AI web app, AI vision, AI image generation, AI voice">
+  <meta name="author" content="zaenishi">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="language" content="Indonesian">
+  <meta name="geo.region" content="ID-JB">
   <meta name="theme-color" content="#EAF6FF">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M3 17C3 9 9 4 16 4s13 5 13 13c0 2-3 3-13 3S3 19 3 17z' fill='%23F2573F'/%3E%3Cpath d='M12 19h8l1 9c0 2-3 3-5 3s-5-1-5-3z' fill='%23FFF6E0'/%3E%3C/svg%3E">
+  <link rel="canonical" href="https://myraasist.vercel.app/">
+
+  <!-- ═══ OPEN GRAPH (WhatsApp, Facebook, LinkedIn, Telegram) ═══ -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MyraAi">
+  <meta property="og:url" content="https://myraasist.vercel.app/">
+  <meta property="og:title" content="MyraAi — Teman Ngobrol AI">
+  <meta property="og:description" content="Asisten AI ramah: chat, coding, belajar, analisis gambar, buat gambar, telepon suara. Gratis, tanpa daftar.">
+  <meta property="og:image" content="https://myraasist.vercel.app/og-image.png">
+  <meta property="og:image:secure_url" content="https://myraasist.vercel.app/og-image.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Myra, jamur AI ramah">
+  <meta property="og:locale" content="id_ID">
+  <meta property="og:locale:alternate" content="en_US">
+
+  <!-- ═══ TWITTER / X ═══ -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@zaenishi">
+  <meta name="twitter:creator" content="@zaenishi">
+  <meta name="twitter:url" content="https://myraasist.vercel.app/">
+  <meta name="twitter:title" content="MyraAi — Teman Ngobrol AI">
+  <meta name="twitter:description" content="Asisten AI ramah: chat, coding, belajar, analisis gambar, buat gambar, telepon suara.">
+  <meta name="twitter:image" content="https://myraasist.vercel.app/og-image.png">
+
+  <!-- ═══ PWA / MOBILE ═══ -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="MyraAi">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+  <!-- ═══ FAVICON ═══ -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M3 17C3 9 9 4 16 4s13 5 13 13c0 2-3 3-13 3S3 19 3 17z' fill='%23F2573F'/%3E%3Cpath d='M12 19h8l1 9c0 2-3 3-5 3s-5-1-5-3z' fill='%23FFF6E0'/%3E%3C/svg%3E">
+
+  <!-- ═══ FONTS ═══ -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- ═══ STYLESHEET ═══ -->
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- ═══ STRUCTURED DATA (JSON-LD) ═══ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://myraasist.vercel.app/#app",
+        "name": "MyraAi",
+        "alternateName": ["Myra", "Si Jamur"],
+        "url": "https://myraasist.vercel.app/",
+        "description": "Asisten AI ramah berbahasa Indonesia: chat, coding, belajar, analisis gambar, buat gambar, dan telepon suara.",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "Any (Web)",
+        "browserRequirements": "Membutuhkan JavaScript. Mode telepon terbaik di Chrome/Edge.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "IDR" },
+        "inLanguage": "id-ID",
+        "screenshot": "https://myraasist.vercel.app/og-image.png",
+        "featureList": [
+          "Chat AI bahasa Indonesia",
+          "Analisis gambar (vision AI)",
+          "Pembuatan gambar AI (text-to-image)",
+          "Mode telepon suara dua arah",
+          "Multi-provider fallback (KMSR, Carpathian, Pollinations)"
+        ],
+        "author": {
+          "@type": "Person",
+          "name": "Jaenar Mohasan Zaki",
+          "alternateName": "zaenishi",
+          "url": "https://instagram.com/znarss_",
+          "sameAs": [
+            "https://instagram.com/znarss_",
+            "https://github.com/zaenishi",
+            "https://www.linkedin.com/in/zaenishi/"
+          ]
+        }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://myraasist.vercel.app/#website",
+        "url": "https://myraasist.vercel.app/",
+        "name": "MyraAi",
+        "inLanguage": "id-ID",
+        "publisher": { "@id": "https://myraasist.vercel.app/#app" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Apakah MyraAi gratis?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Ya, MyraAi gratis dipakai tanpa perlu daftar akun. Cukup buka halaman chat dan mulai bertanya." }
+          },
+          {
+            "@type": "Question",
+            "name": "Siapa yang membuat MyraAi?",
+            "acceptedAnswer": { "@type": "Answer", "text": "MyraAi diciptakan oleh zaenishi (Jaenar Mohasan Zaki), seorang pelajar SMK jurusan teknik mesin dari Karawang, Jawa Barat." }
+          },
+          {
+            "@type": "Question",
+            "name": "Apa saja yang bisa dilakukan MyraAi?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Myra bisa: chat teks bebas, membantu coding & debugging, membaca dan menjelaskan gambar, membuat gambar dari deskripsi, serta telepon suara dua arah." }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body data-route="home">
   <!-- Sprite ikon -->

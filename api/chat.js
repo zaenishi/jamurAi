@@ -1,15 +1,17 @@
 // POST /api/chat → { reply }      GET /api/chat → { ok: true } (indikator status + membangunkan server KMSR)
-// Kecepatan: provider dibalap (hedged). Kalau provider utama belum menjawab dalam HEDGE_MS atau gagal,
-// provider berikutnya langsung dijalankan paralel; jawaban tercepat dipakai.
 import { sendJson, rateLimit, clientIp, sameOrigin, sniffImage, raceProviders } from './_lib/http.js';
 import { kmsr, warmKmsr } from './_lib/kmsr.js';
 import { carpathian } from './_lib/carpathian.js';
 import { pollinations } from './_lib/pollinations.js';
 
-
 const REGISTRY = { kmsr, carpathian, pollinations };
-const ORDER = (process.env.PROVIDERS || 'kmsr,carpathian,pollinations').split(',').map((s) => s.trim()).filter((n) => REGISTRY[n]);
-const HEDGE_MS = Number(process.env.HEDGE_MS) || 6000;
+const ORDER = (process.env.PROVIDERS || 'kmsr,carpathian,pollinations')
+  .split(',').map((s) => s.trim()).filter((n) => REGISTRY[n]);
+
+// ⬇ DIPERCEPAT: 6s→3.5s (text), 9s→2.5s (gambar) supaya fallback cepat mulai
+const HEDGE_TEXT  = Number(process.env.HEDGE_MS)        || 3500;
+const HEDGE_IMAGE = Number(process.env.HEDGE_IMG_MS)    || 2500;
+
 const MAX_MSG = 4000;
 const MAX_IMG_BYTES = 3.2 * 1024 * 1024;
 
@@ -32,7 +34,7 @@ export default async function handler(req, res) {
   const history = cleanHistory(body.history);
   const opts = { voice: body.voice === true, userName: typeof body.userName === 'string' ? body.userName : '' };
 
-  // Gambar dikirim langsung di request yang sama (tanpa token/sesi terpisah)
+  // Gambar dikirim langsung di request yang sama
   if (body.image) {
     if (typeof body.image.data !== 'string') return sendJson(res, 400, { error: 'Data gambar tidak valid.' });
     const buffer = Buffer.from(body.image.data, 'base64');
@@ -42,17 +44,32 @@ export default async function handler(req, res) {
     opts.image = { buffer, data: body.image.data, ...kind };
   }
 
-  // Dengan gambar → hanya provider yang mendukung vision
+  // Hanya provider yang mendukung vision saat ada gambar
   const providers = ORDER.map((n) => REGISTRY[n]).filter((p) => !opts.image || p.supportsImages);
   if (!providers.length) return sendJson(res, 503, { error: 'Belum ada layanan yang bisa membaca gambar.' });
 
+  // ⬇ REVISI: untuk gambar, carpathian (vision asli) didahulukan.
+  //   pollinations hanya fallback (endpoint-nya sering tidak support vision).
+  const ordered = opts.image
+    ? [...providers].sort((a, b) =>
+        (a.name === 'carpathian' ? -1 : b.name === 'carpathian' ? 1 : 0))
+    : providers;
+
   try {
-    // Untuk gambar, Pollinations (satu panggilan, tanpa upload) didahulukan lalu Carpathian sebagai pendamping.
-    const ordered = opts.image ? [...providers].sort((a, b) => (a.name === 'pollinations' ? -1 : b.name === 'pollinations' ? 1 : 0)) : providers;
-    const { text, provider } = await raceProviders(ordered, (p) => p.chat(message, history, opts), opts.image ? 9000 : HEDGE_MS);
+    const { text, provider } = await raceProviders(
+      ordered,
+      (p) => p.chat(message, history, opts),
+      opts.image ? HEDGE_IMAGE : HEDGE_TEXT,
+    );
     return sendJson(res, 200, { reply: text, provider });
   } catch (e) {
+    const debug = process.env.DEBUG === '1';
     console.error('Semua provider gagal:', e.message);
-    return sendJson(res, 502, { error: opts.image ? 'Myra belum bisa membaca gambar ini. Coba gambar lain atau ulangi sebentar lagi.' : 'Myra lagi kesulitan menjawab. Coba lagi sebentar ya.' });
+    return sendJson(res, 502, {
+      error: opts.image
+        ? 'Myra belum bisa membaca gambar ini. Coba gambar lain atau ulangi sebentar lagi.'
+        : 'Myra lagi kesulitan menjawab. Coba lagi sebentar ya.',
+      ...(debug ? { detail: String(e.message).slice(0, 500) } : {}),
+    });
   }
 }
