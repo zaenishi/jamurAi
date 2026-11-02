@@ -145,3 +145,39 @@ export function sendJson(res, status, body) {
   res.setHeader('Cache-Control', 'no-store');
   res.send(JSON.stringify(body));
 }
+
+// ── Deteksi tipe gambar dari isi file (bukan percaya MIME dari client) ──
+export function sniffImage(buf) {
+  if (!buf || buf.length < 12) return null;
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return { mimeType: 'image/jpeg', ext: '.jpg' };
+  if (buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return { mimeType: 'image/png', ext: '.png' };
+  if (buf.subarray(0, 4).toString('ascii') === 'GIF8') return { mimeType: 'image/gif', ext: '.gif' };
+  if (buf.subarray(0, 4).toString('ascii') === 'RIFF' && buf.subarray(8, 12).toString('ascii') === 'WEBP') return { mimeType: 'image/webp', ext: '.webp' };
+  return null;
+}
+
+// ── Balapan antar-provider (hedged request) ──
+// Mulai provider pertama. Jika belum selesai setelah `hedgeMs`, ATAU gagal, langsung mulai provider
+// berikutnya tanpa menunggu yang pertama. Yang pertama berhasil menang.
+export function raceProviders(providers, call, hedgeMs = 6000) {
+  return new Promise((resolve, reject) => {
+    let started = 0, failed = 0, done = false, timer = null;
+    const errors = [];
+    const startNext = () => {
+      if (done || started >= providers.length) return;
+      const p = providers[started++];
+      clearTimeout(timer);
+      if (started < providers.length) timer = setTimeout(startNext, hedgeMs);
+      Promise.resolve().then(() => call(p)).then((r) => {
+        if (done) return;
+        done = true; clearTimeout(timer); resolve({ ...r, provider: p.name });
+      }).catch((e) => {
+        errors.push(`[${p.name}] ${e.message}`); failed++;
+        if (done) return;
+        if (failed >= providers.length) { done = true; clearTimeout(timer); reject(new Error(errors.join(' || '))); }
+        else startNext();
+      });
+    };
+    startNext();
+  });
+}

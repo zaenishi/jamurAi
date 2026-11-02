@@ -3,7 +3,7 @@ import { ProviderError, fetchWithTimeout, sleep, randId, UA, DEBUG } from './htt
 import { buildPersona } from './persona.js';
 
 const ENDPOINT = 'https://chatbot-backend-kmsr.onrender.com/api/chat';
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 12;
 const ATTEMPTS = Math.max(1, Math.min(3, Number(process.env.ATTEMPTS) || 1));
 const TIMEOUT = Number(process.env.KMSR_TIMEOUT_MS) || 25000;
 
@@ -35,6 +35,9 @@ async function attempt(userMsg, history, persona) {
   if (!reply) throw new ProviderError('Empty reply', { code: 'EMPTY', retryable: true });
   return String(reply);
 }
+
+// Bangunkan server Render yang tidur (cold start) tanpa menunggu lama.
+export const warmKmsr = () => fetchWithTimeout(new URL(ENDPOINT).origin + '/', { method: 'GET', headers: { 'User-Agent': UA } }, 3500).catch(() => {});
 
 export const kmsr = {
   name: 'kmsr',

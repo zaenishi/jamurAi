@@ -3,129 +3,273 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Si Jamur — teman ngobrol dari hutan</title>
-  <meta name="description" content="Si Jamur: asisten AI ramah ciptaan zaenishi. Ketik, kirim gambar, atau telepon langsung.">
-  <meta name="theme-color" content="#14110C">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M3 17C3 9 9 4 16 4s13 5 13 13c0 2-3 3-13 3S3 19 3 17z' fill='%23B8552F'/%3E%3Cpath d='M12 19h8l1 9c0 2-3 3-5 3s-5-1-5-3z' fill='%23F7EEDC'/%3E%3C/svg%3E">
+  <title>MyraAI — teman ngobrol AI yang ceria</title>
+  <meta name="description" content="Myra Ai: asisten AI ramah ciptaan zaenishi. Ketik, kirim gambar, buat gambar, atau telepon langsung.">
+  <meta name="theme-color" content="#EAF6FF">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M3 17C3 9 9 4 16 4s13 5 13 13c0 2-3 3-13 3S3 19 3 17z' fill='%23F2573F'/%3E%3Cpath d='M12 19h8l1 9c0 2-3 3-5 3s-5-1-5-3z' fill='%23FFF6E0'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,500..800,100&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body data-view="landing">
+<body data-route="home">
+  <!-- Sprite ikon -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-code" viewBox="0 0 24 24"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></symbol>
+      <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></symbol>
+      <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></symbol>
+      <symbol id="i-mic-off" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3M3 3l18 18"/></symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .4 1.9.7 2.8a2 2 0 01-.5 2.1L8.1 9.9a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.6 2.8.7a2 2 0 011.7 2z"/></symbol>
+      <symbol id="i-phone-end" viewBox="0 0 24 24"><path d="M3.6 11.4C6 9.4 9 8.5 12 8.5s6 .9 8.4 2.9c.6.5.8 1.3.4 2l-1.3 2.1c-.4.6-1.1.8-1.8.5l-2.5-1.2c-.5-.2-.8-.7-.8-1.2V12c-1.200-.4-2.800-.4-4 0v1.600c0 .5-.3 1-.8 1.200l-2.500 1.200c-.7.3-1.400.1-1.800-.5L3.200 13.400c-.4-.7-.2-1.500.4-2z"/></symbol>
+      <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></symbol>
+      <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h8M18 6h2M4 12h2M12 12h8M4 18h10M20 18h0"/><circle cx="15" cy="6" r="2.2"/><circle cx="9" cy="12" r="2.2"/><circle cx="17" cy="18" r="2.2"/></symbol>
+      <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></symbol>
+      <symbol id="i-clip" viewBox="0 0 24 24"><path d="M21 11.5l-8.6 8.6a5 5 0 01-7-7L14 4.500a3.300 3.300 0 014.700 4.700L10 18a1.700 1.700 0 01-2.400-2.400l8-8"/></symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.500 8-8 9-4.500-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+      <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-8-5.200-8-11a4.500 4.500 0 018-2.800A4.500 4.500 0 0120 10c0 5.800-8 11-8 11z"/></symbol>
+      <symbol id="i-instagram" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.500" cy="6.500" r=".6"/></symbol>
+      <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.700 0l3-3a4 4 0 00-5.700-5.700l-1 1M14 10a4 4 0 00-5.700 0l-3 3A4 4 0 0011 18.700l1-1"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.300 5.700M20 4v7h-7"/></symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.500 7.200L4 21l1.800-5A8 8 0 1121 12z"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.500l4.500 4.500L19 7"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i></div>
   <div class="spores" aria-hidden="true"></div>
 
-  <header class="top">
-    <button class="brand" id="brand" aria-label="Kembali ke beranda">
-      <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><path d="M3 17C3 9 9 4 16 4s13 5 13 13c0 2-3 3-13 3S3 19 3 17z" fill="#B8552F"/><circle cx="10" cy="12" r="2.2" fill="#F7EEDC"/><circle cx="19" cy="9" r="1.8" fill="#F7EEDC"/><circle cx="23" cy="14" r="2" fill="#F7EEDC"/><path d="M12 19h8l1 9c0 2-3 3-5 3s-5-1-5-3z" fill="#F7EEDC"/></svg>
-      <span>Si Jamur</span>
-    </button>
-    <div class="top-right">
-      <span class="status" id="status" data-s="check"><i></i><b>Memeriksa…</b></span>
-      <button class="btn ghost sm" id="btn-call-top" hidden>Telepon</button>
-      <button class="icon-btn" id="btn-settings" aria-label="Pengaturan" hidden>
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>
-      </button>
+  <!-- ═════ NAVBAR ═════ -->
+  <header class="nav" id="nav">
+    <div class="nav-in">
+      <a class="brand" href="#/" aria-label="MyraAi, ke beranda">
+        <svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true"><path d="M3 17C3 9 9 4 16 4s13 5 13 13c0 2-3 3-13 3S3 19 3 17z" fill="#F2573F"/><circle cx="10" cy="12" r="2.2" fill="#FFF6E0"/><circle cx="19" cy="9" r="1.800" fill="#FFF6E0"/><circle cx="23" cy="14" r="2" fill="#FFF6E0"/><path d="M12 19h8l1 9c0 2-3 3-5 3s-5-1-5-3z" fill="#FFF6E0" stroke="#F2D9A8" stroke-width=".6"/></svg>
+        <span>MyraAi</span>
+      </a>
+      <nav class="links" id="nav-links" aria-label="Navigasi utama">
+        <i class="pill" id="nav-pill" aria-hidden="true"></i>
+        <a href="#/" data-route="home">Beranda</a>
+        <a href="#/fitur" data-route="fitur">Fitur</a>
+        <a href="#/pembuat" data-route="pembuat">Pembuat</a>
+        <a href="#/dokumentasi" data-route="dokumentasi">Dokumentasi</a>
+      </nav>
+      <div class="nav-actions">
+        <span class="status" id="status" data-s="check" title="Status layanan AI"><i></i><b>Memeriksa…</b></span>
+        <a class="btn primary sm shine" href="#/chat" id="nav-cta">Mulai chat</a>
+        <button class="burger" id="burger" aria-label="Buka menu" aria-expanded="false" aria-controls="drawer"><svg class="i"><use href="#i-menu"/></svg></button>
+      </div>
     </div>
+    <div class="progress" id="progress" aria-hidden="true"></div>
   </header>
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <a href="#/" data-route="home">Beranda</a>
+    <a href="#/fitur" data-route="fitur">Fitur</a>
+    <a href="#/pembuat" data-route="pembuat">Pembuat</a>
+    <a href="#/dokumentasi" data-route="dokumentasi">Dokumentasi</a>
+    <a class="btn primary" href="#/chat">Mulai chat <svg class="i"><use href="#i-arrow"/></svg></a>
+  </div>
 
-  <main>
-    <!-- ═════ LANDING ═════ -->
-    <section id="view-landing" class="landing">
-      <div class="hero">
+  <main id="main">
+    <!-- ═════ BERANDA ═════ -->
+    <section class="page" id="page-home" data-page="home">
+      <div class="wrap hero">
         <div class="hero-copy">
-          <h1>Tanya apa saja ke Si Jamur.</h1>
-          <p class="lead">Asisten AI yang bisa membantu coding, belajar, menulis, dan membaca gambar. Ketik pertanyaanmu, atau langsung telepon.</p>
-          <div class="cta">
-            <button class="btn primary" id="btn-start">Mulai ngobrol</button>
-            <button class="btn ghost" id="btn-call-hero">Telepon Si Jamur</button>
+          <p class="badge" data-reveal><svg class="i"><use href="#i-sparkle"/></svg> Asisten AI yang ramah dan cepat</p>
+          <h1 data-reveal style="--i:1">Tanya apa saja ke MyraAi.</h1>
+          <p class="lead" data-reveal style="--i:2">Bantu coding, belajar, menulis, membaca gambar, bahkan melukis gambar baru. Ketik pertanyaanmu atau langsung telepon.</p>
+          <div class="cta" data-reveal style="--i:3">
+            <a class="btn primary lg shine" href="#/chat" id="btn-start">Mulai ngobrol <svg class="i"><use href="#i-arrow"/></svg></a>
+            <button class="btn ghost lg" id="btn-call-hero" type="button"><svg class="i"><use href="#i-phone"/></svg> Telepon MyraAi</button>
           </div>
           <p class="hello" id="hello" hidden></p>
         </div>
-        <div class="hero-stage">
-          <div class="glow" aria-hidden="true"></div>
+        <div class="hero-stage" data-reveal style="--i:2">
+          <div class="ring r1" aria-hidden="true"></div><div class="ring r2" aria-hidden="true"></div>
+          <div class="orbit" aria-hidden="true">
+            <span class="o o1"><svg class="i"><use href="#i-code"/></svg></span>
+            <span class="o o2"><svg class="i"><use href="#i-image"/></svg></span>
+            <span class="o o3"><svg class="i"><use href="#i-mic"/></svg></span>
+            <span class="o o4"><svg class="i"><use href="#i-sparkle"/></svg></span>
+          </div>
           <div id="hero-mushroom" class="stage-mushroom"></div>
           <div class="ground" aria-hidden="true"></div>
+          <div class="demo" id="hero-demo" aria-hidden="true"><div class="d-user"></div><div class="d-ai"></div></div>
         </div>
       </div>
 
-      <div class="ways">
-        <article>
-          <h2>Ketik atau telepon</h2>
-          <p>Mode telepon menampilkan Si Jamur layar penuh. Kamu bicara, dia menjawab dengan suara yang pendek dan mudah dipahami anak-anak.</p>
-        </article>
-        <article>
-          <h2>Kirim satu gambar</h2>
-          <p>Unggah 1 gambar per pesan (JPG, PNG, WebP, GIF, sampai 20 MB). Si Jamur menjelaskan apa yang benar-benar terlihat.</p>
-        </article>
-        <article>
-          <h2>Kode yang rapi</h2>
-          <p>Kode muncul dalam blok berwarna dengan tombol salin. Peringatan dan hasil sukses tampil sebagai kartu sendiri.</p>
-        </article>
-      </div>
-
-      <div class="creator" id="creator">
-        <div class="creator-id">
-          <span class="avatar" aria-hidden="true">z</span>
-          <div>
-            <h2>Dibuat oleh <span id="creator-name">zaenishi</span></h2>
-            <p id="creator-bio"></p>
-          </div>
+      <div class="marquee" aria-hidden="true">
+        <div class="track">
+          <span>Coding</span><span>Belajar</span><span>Menulis</span><span>Analisis gambar</span><span>Buat gambar</span><span>Telepon suara</span><span>Terjemahan</span><span>Ide kreatif</span>
+          <span>Coding</span><span>Belajar</span><span>Menulis</span><span>Analisis gambar</span><span>Buat gambar</span><span>Telepon suara</span><span>Terjemahan</span><span>Ide kreatif</span>
         </div>
-        <ul class="links" id="creator-links"></ul>
       </div>
 
-      <div class="docs">
-        <h2>Dokumentasi singkat</h2>
-        <details open><summary>Cara memakai</summary>
-          <p>Klik <b>Mulai ngobrol</b>, ketik pertanyaan, lalu tekan Enter. Shift+Enter untuk baris baru. Klik ikon klip untuk melampirkan satu gambar. Klik <b>Telepon</b> untuk bicara langsung.</p>
-        </details>
-        <details><summary>Batas penggunaan</summary>
-          <p>Satu gambar per pesan, maksimal 20 MB. Gambar besar dikompres otomatis sebelum dikirim. Tombol kirim punya jeda singkat dan ada batas pesan per menit supaya layanan tetap lancar.</p>
-        </details>
-        <details><summary>Suara dan mikrofon</summary>
-          <p>Mode telepon memakai pengenalan suara dan suara bawaan browser. Chrome dan Edge paling stabil. Browser akan meminta izin mikrofon saat pertama kali.</p>
-        </details>
-        <details><summary>Data tersimpan di mana?</summary>
-          <p>Nama dan riwayat obrolanmu disimpan di browser ini saja. Kamu bisa menghapusnya kapan saja di Pengaturan.</p>
-        </details>
+      <div class="wrap section">
+        <div class="sec-head" data-reveal><h2>Satu teman, banyak jurus</h2><p>Semua yang kamu butuhkan ada di satu percakapan.</p></div>
+        <div class="grid cards">
+          <article class="card tilt c-sun" data-reveal style="--i:0"><span class="ico"><svg class="i"><use href="#i-code"/></svg></span><h3>Kode yang rapi</h3><p>Blok kode berwarna dengan tombol salin, lengkap dengan penjelasan yang mudah diikuti.</p></article>
+          <article class="card tilt c-sky" data-reveal style="--i:1"><span class="ico"><svg class="i"><use href="#i-image"/></svg></span><h3>Baca gambar</h3><p>Kirim satu gambar dan MyraAi menjelaskan apa yang benar-benar terlihat.</p></article>
+          <article class="card tilt c-berry" data-reveal style="--i:2"><span class="ico"><svg class="i"><use href="#i-sparkle"/></svg></span><h3>Buat gambar</h3><p>Ceritakan idemu, MyraAi melukisnya. Unduh atau buat ulang dengan satu ketukan.</p></article>
+          <article class="card tilt c-mint" data-reveal style="--i:3"><span class="ico"><svg class="i"><use href="#i-phone"/></svg></span><h3>Telepon langsung</h3><p>Bicara seperti dengan teman. MyraAi menjawab dengan suara yang enak didengar.</p></article>
+        </div>
+        <p class="center" data-reveal><a class="btn ghost" href="#/fitur">Lihat semua fitur <svg class="i"><use href="#i-arrow"/></svg></a></p>
       </div>
-      <footer class="foot">Si Jamur v5 · ciptaan zaenishi</footer>
+
+      <div class="wrap section">
+        <div class="cta-band" data-reveal>
+          <div><h2>Siap kenalan?</h2><p>Tidak perlu daftar. Nama dan riwayat obrolan tersimpan di browser kamu.</p></div>
+          <a class="btn light lg shine" href="#/chat">Mulai ngobrol <svg class="i"><use href="#i-arrow"/></svg></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════ FITUR ═════ -->
+    <section class="page" id="page-fitur" data-page="fitur" hidden>
+      <div class="wrap page-head">
+        <p class="badge"><svg class="i"><use href="#i-bolt"/></svg> Fitur</p>
+        <h1>Apa saja yang bisa MyraAi lakukan</h1>
+        <p class="lead">Empat jurus utama, semuanya bisa dipakai langsung dari halaman chat.</p>
+      </div>
+
+      <div class="wrap feature-list">
+        <article class="feat" data-reveal>
+          <div class="feat-copy"><span class="ico c-sun"><svg class="i"><use href="#i-code"/></svg></span><h2>Ngobrol dan coding</h2>
+            <p>Tanya apa saja: pelajaran, tulisan, ide, sampai debugging. Kode tampil dalam blok berwarna dengan tombol salin. Peringatan dan hasil sukses muncul sebagai kartu sendiri supaya mudah dilihat.</p>
+            <ul class="ticks"><li>Format rapi: judul, daftar, tabel kode</li><li>Ingat konteks obrolan sebelumnya</li><li>Shift+Enter untuk baris baru</li></ul></div>
+          <div class="feat-art art-code" aria-hidden="true"><div class="codeblock demo-code"><header><span>javascript</span><span class="copy">Salin</span></header><pre><code><span class="t-k">const</span> <span class="t-f">debounce</span> = (fn, ms) =&gt; {
+  <span class="t-k">let</span> t;
+  <span class="t-k">return</span> (...a) =&gt; {
+    <span class="t-f">clearTimeout</span>(t);
+    t = <span class="t-f">setTimeout</span>(() =&gt; fn(...a), ms);
+  };
+};</code></pre></div></div>
+        </article>
+
+        <article class="feat flip" data-reveal>
+          <div class="feat-copy"><span class="ico c-sky"><svg class="i"><use href="#i-image"/></svg></span><h2>Analisis gambar</h2>
+            <p>Klik ikon klip, tempel dengan Ctrl+V, atau seret gambar ke area chat. MyraAi membaca isi gambarnya: objek, warna, suasana, sampai teks di dalamnya.</p>
+            <ul class="ticks"><li>JPG, PNG, WebP, dan GIF sampai 20 MB</li><li>Gambar besar dikompres otomatis</li><li>Satu gambar per pesan</li></ul></div>
+          <div class="feat-art art-scan" aria-hidden="true"><div class="scan-card"><div class="scan-img"><i class="sun"></i><i class="hill h1"></i><i class="hill h2"></i><i class="scan-line"></i><b class="tag t1">pegunungan</b><b class="tag t2">matahari terbit</b></div></div></div>
+        </article>
+
+        <article class="feat" data-reveal>
+          <div class="feat-copy"><span class="ico c-berry"><svg class="i"><use href="#i-sparkle"/></svg></span><h2>Buat gambar</h2>
+            <p>Tekan tombol bintang di kotak chat atau langsung ketik “buatkan gambar kucing astronot”. Gambar bisa diunduh atau dibuat ulang kalau belum pas.</p>
+            <ul class="ticks"><li>Format kotak, lebar, atau tegak</li><li>Beberapa penyedia gambar jadi cadangan</li><li>Biasanya selesai 10 sampai 30 detik</li></ul></div>
+          <div class="feat-art art-paint" aria-hidden="true"><div class="paint-demo"><i></i><i></i><i></i><i></i></div></div>
+        </article>
+
+        <article class="feat flip" data-reveal>
+          <div class="feat-copy"><span class="ico c-mint"><svg class="i"><use href="#i-phone"/></svg></span><h2>Telepon suara</h2>
+            <p>Mode telepon menampilkan MyraAi layar penuh. Kamu bicara, dia mendengarkan, lalu menjawab dengan kalimat pendek dan suara yang natural. Ketuk MyraAi kalau mau menyela.</p>
+            <ul class="ticks"><li>Pilih suara dan kecepatan di Pengaturan</li><li>Ucapan dibacakan utuh, tidak terpotong</li><li>Chrome dan Edge paling stabil</li></ul></div>
+          <div class="feat-art art-wave" aria-hidden="true"><div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+        </article>
+      </div>
+      <div class="wrap section"><div class="cta-band" data-reveal><div><h2>Coba sendiri</h2><p>Semua fitur ada di halaman chat.</p></div><a class="btn light lg shine" href="#/chat">Buka chat <svg class="i"><use href="#i-arrow"/></svg></a></div></div>
+    </section>
+
+    <!-- ═════ PEMBUAT ═════ -->
+    <section class="page" id="page-pembuat" data-page="pembuat" hidden>
+      <div class="wrap page-head">
+        <p class="badge"><svg class="i"><use href="#i-heart"/></svg> Di balik layar</p>
+        <h1>Dibuat oleh <span id="creator-name">zaenishi</span></h1>
+        <p class="lead" id="creator-bio"></p>
+      </div>
+      <div class="wrap creator-grid">
+        <article class="card creator-card tilt" data-reveal>
+          <div class="avatar-wrap"><span class="avatar" aria-hidden="true">z</span><i class="halo" aria-hidden="true"></i></div>
+          <h2 id="creator-name-2">zaenishi</h2>
+          <p class="muted">Pembuat MyraAi</p>
+          <ul class="links-list" id="creator-links"></ul>
+        </article>
+        <div class="creator-side">
+          <article class="card" data-reveal style="--i:1"><h3>Tentang proyek</h3><p>MyraAi lahir sebagai asisten AI berbasis teks di terminal, lalu dirombak menjadi aplikasi web supaya bisa dipakai siapa saja dari browser atau ponsel.</p></article>
+          <article class="card" data-reveal style="--i:2"><h3>Dibangun dengan</h3>
+            <div class="tags"><span>JavaScript</span><span>Vercel Functions</span><span>SVG animasi</span><span>Web Speech API</span><span>Beberapa penyedia AI</span></div></article>
+          <article class="card" data-reveal style="--i:3"><h3>Punya saran?</h3><p>Kabari lewat tautan di kartu pembuat. Kritik soal tampilan, jawaban AI, atau fitur yang kamu mau akan sangat membantu.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════ DOKUMENTASI ═════ -->
+    <section class="page" id="page-dokumentasi" data-page="dokumentasi" hidden>
+      <div class="wrap page-head">
+        <p class="badge"><svg class="i"><use href="#i-shield"/></svg> Dokumentasi</p>
+        <h1>Cara memakai MyraAi</h1>
+        <p class="lead">Panduan singkat, batas penggunaan, dan jawaban untuk pertanyaan yang sering muncul.</p>
+      </div>
+      <div class="wrap docs-grid">
+        <aside class="card quick" data-reveal>
+          <h3>Mulai cepat</h3>
+          <ol class="steps"><li>Buka <a href="#/chat">halaman chat</a> dan isi namamu.</li><li>Ketik pertanyaan lalu tekan Enter.</li><li>Klik ikon klip untuk gambar, atau bintang untuk membuat gambar.</li><li>Klik <b>Telepon</b> untuk bicara langsung.</li></ol>
+          <h3>Pintasan</h3>
+          <dl class="keys"><dt><kbd>Enter</kbd></dt><dd>Kirim pesan</dd><dt><kbd>Shift</kbd>+<kbd>Enter</kbd></dt><dd>Baris baru</dd><dt><kbd>Ctrl</kbd>+<kbd>V</kbd></dt><dd>Tempel gambar</dd><dt><kbd>Esc</kbd></dt><dd>Akhiri telepon</dd></dl>
+        </aside>
+        <div class="faq" data-reveal style="--i:1">
+          <details open><summary>Batas penggunaan<svg class="i"><use href="#i-chevron"/></svg></summary><div><p>Satu gambar per pesan, maksimal 20 MB. Gambar besar dikompres otomatis sebelum dikirim. Pesan maksimal 4.000 karakter. Tombol kirim punya jeda singkat dan ada batas pesan per menit supaya layanan tetap lancar.</p></div></details>
+          <details><summary>Kenapa jawabannya kadang agak lama?<svg class="i"><use href="#i-chevron"/></svg></summary><div><p>MyraAi memakai beberapa penyedia AI. Jika yang pertama lambat, penyedia kedua otomatis dijalankan bersamaan dan jawaban tercepat dipakai. Setelah lama tidak dipakai, layanan perlu beberapa detik untuk bangun.</p></div></details>
+          <details><summary>Suara dan mikrofon<svg class="i"><use href="#i-chevron"/></svg></summary><div><p>Mode telepon memakai pengenalan suara dan suara bawaan browser. Kualitas suara bergantung pada perangkat: di Pengaturan kamu bisa memilih suara lain dan mengatur kecepatannya. Browser akan meminta izin mikrofon saat pertama kali.</p></div></details>
+          <details><summary>Cara membuat gambar<svg class="i"><use href="#i-chevron"/></svg></summary><div><p>Di halaman chat, tekan tombol bintang lalu tulis deskripsinya, atau ketik kalimat seperti “buatkan gambar rumah pohon di senja hari”. Tulis detail seperti warna, suasana, dan gaya agar hasilnya lebih pas.</p></div></details>
+          <details><summary>Data tersimpan di mana?<svg class="i"><use href="#i-chevron"/></svg></summary><div><p>Nama dan riwayat obrolanmu disimpan di browser ini saja. Tekan tombol tempat sampah di halaman chat untuk membersihkan obrolan kapan saja.</p></div></details>
+          <details><summary>Browser apa yang didukung?<svg class="i"><use href="#i-chevron"/></svg></summary><div><p>Chat dan gambar berjalan di semua browser modern. Mode telepon paling stabil di Chrome dan Edge. Safari iOS belum mendukung layar penuh pada elemen, tetapi telepon tetap menutup layar.</p></div></details>
+        </div>
+      </div>
     </section>
 
     <!-- ═════ CHAT ═════ -->
-    <section id="view-chat" class="chat" hidden>
-      <div class="scroller" id="scroller">
-        <div class="thread" id="thread" aria-live="polite"></div>
+    <section class="page chat" id="page-chat" data-page="chat" hidden>
+      <div class="chat-bar">
+        <div class="who"><span class="who-av" id="who-av" aria-hidden="true"></span><div><b>MyraAi</b><small id="who-sub">Siap membantu</small></div></div>
+        <div class="bar-actions">
+          <button class="icon-btn labeled" id="btn-call-top" type="button" aria-label="Telepon MyraAi"><svg class="i"><use href="#i-phone"/></svg><span>Telepon</span></button>
+          <button class="icon-btn labeled" id="btn-clear-chat" type="button" aria-label="Bersihkan obrolan"><svg class="i"><use href="#i-trash"/></svg><span>Bersihkan</span></button>
+          <button class="icon-btn" id="btn-settings" type="button" aria-label="Pengaturan"><svg class="i"><use href="#i-sliders"/></svg></button>
+        </div>
       </div>
+      <div class="scroller" id="scroller"><div class="thread" id="thread" aria-live="polite"></div></div>
+      <div class="dropzone" aria-hidden="true"><div><svg class="i"><use href="#i-image"/></svg><b>Lepas gambar di sini</b></div></div>
       <div class="composer-wrap">
         <div class="attach-chip" id="attach-chip" hidden>
-          <img id="attach-img" alt="Pratinjau gambar terlampir">
-          <span id="attach-name"></span>
-          <button class="icon-btn" id="attach-remove" aria-label="Hapus gambar">×</button>
+          <img id="attach-img" alt="Pratinjau gambar terlampir"><span id="attach-name"></span>
+          <button class="icon-btn" id="attach-remove" type="button" aria-label="Hapus gambar"><svg class="i"><use href="#i-close"/></svg></button>
         </div>
-        <div class="composer">
+        <div class="composer" id="composer">
           <input type="file" id="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
-          <button class="icon-btn" id="btn-attach" aria-label="Lampirkan 1 gambar">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5 5 0 01-7-7L14 4.5a3.3 3.3 0 014.7 4.7L10 18a1.7 1.7 0 01-2.4-2.4l8-8"/></svg>
-          </button>
-          <textarea id="input" rows="1" maxlength="4000" placeholder="Tulis pesan untuk Si Jamur…" aria-label="Pesan"></textarea>
-          <button class="send" id="btn-send" aria-label="Kirim" style="--p:0">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3.4 20.4l17.5-7.5a1 1 0 000-1.8L3.4 3.6a1 1 0 00-1.4 1.2L4 11l9 1-9 1-2 6.2a1 1 0 001.4 1.2z"/></svg>
-          </button>
+          <button class="icon-btn" id="btn-attach" type="button" aria-label="Lampirkan 1 gambar" title="Lampirkan gambar"><svg class="i"><use href="#i-clip"/></svg></button>
+          <button class="icon-btn gen-btn" id="btn-genimg" type="button" aria-pressed="false" aria-label="Mode buat gambar" title="Buat gambar"><svg class="i"><use href="#i-sparkle"/></svg></button>
+          <textarea id="input" rows="1" maxlength="4000" placeholder="Tulis pesan untuk MyraAi…" aria-label="Pesan"></textarea>
+          <button class="send" id="btn-send" type="button" aria-label="Kirim" style="--p:0"><svg class="i"><use href="#i-send"/></svg></button>
         </div>
       </div>
     </section>
   </main>
+
+  <footer class="foot" id="foot">
+    <div class="wrap foot-in">
+      <a class="brand sm" href="#/"><span>MyraAi</span></a>
+      <nav aria-label="Tautan kaki"><a href="#/fitur">Fitur</a><a href="#/pembuat">Pembuat</a><a href="#/dokumentasi">Dokumentasi</a><a href="#/chat">Chat</a></nav>
+      <small>MyraAi v6, ciptaan zaenishi</small>
+    </div>
+  </footer>
 
   <!-- Dialog nama -->
   <dialog id="dlg-welcome">
     <form method="dialog" id="form-welcome">
       <div id="welcome-mushroom" class="dlg-mushroom"></div>
       <h2>Hai, kenalan dulu yuk</h2>
-      <p>Siapa namamu? Si Jamur akan mengingatnya di browser ini.</p>
+      <p>Siapa namamu? MyraAi akan mengingatnya di browser ini.</p>
       <input id="name-input" maxlength="30" autocomplete="given-name" placeholder="Namamu" required>
-      <button class="btn primary" type="submit">Lanjut</button>
+      <div class="row"><button class="btn ghost" type="button" id="btn-skip-name">Lewati</button><button class="btn primary" type="submit">Lanjut</button></div>
     </form>
   </dialog>
 
@@ -135,27 +279,38 @@
       <h2>Pengaturan</h2>
       <label>Nama<input id="set-name" maxlength="30"></label>
       <label class="check"><input type="checkbox" id="set-tts"> Bacakan jawaban di chat dengan suara</label>
+      <label>Suara<select id="set-voice"></select></label>
+      <label>Kecepatan bicara <output id="set-rate-val">1,0×</output><input type="range" id="set-rate" min="0.8" max="1.25" step="0.05" value="1"></label>
+      <button class="btn ghost sm" type="button" id="btn-test-voice"><svg class="i"><use href="#i-play"/></svg> Tes suara</button>
       <p class="muted" id="set-storage"></p>
-      <div class="row">
-        <button class="btn danger" type="button" id="btn-clear">Hapus riwayat</button>
-        <button class="btn primary" type="submit">Simpan</button>
-      </div>
+      <div class="row"><button class="btn danger" type="button" id="btn-clear"><svg class="i"><use href="#i-trash"/></svg> Bersihkan obrolan</button><button class="btn primary" type="submit">Simpan</button></div>
+    </form>
+  </dialog>
+
+  <!-- Dialog konfirmasi bersihkan -->
+  <dialog id="dlg-clear">
+    <form method="dialog">
+      <h2>Bersihkan obrolan?</h2>
+      <p>Semua pesan di browser ini akan dihapus dan tidak bisa dikembalikan.</p>
+      <div class="row"><button class="btn ghost" value="no" id="btn-clear-no">Batal</button><button class="btn danger" value="yes" id="btn-clear-yes"><svg class="i"><use href="#i-trash"/></svg> Ya, bersihkan</button></div>
     </form>
   </dialog>
 
   <!-- Layar telepon -->
-  <div class="call" id="call" aria-hidden="true" role="dialog" aria-label="Mode telepon dengan Si Jamur">
-    <div class="call-bg" aria-hidden="true"></div>
-    <div class="call-stage"><div class="glow big" aria-hidden="true"></div><button class="call-mushroom" id="call-mushroom" aria-label="Sentuh Si Jamur untuk menyela"></button></div>
+  <div class="call" id="call" aria-hidden="true" role="dialog" aria-label="Mode telepon dengan MyraAi" data-s="idle">
+    <div class="call-bg" aria-hidden="true"><i></i><i></i><i></i></div>
+    <p class="call-top">Telepon dengan MyraAi</p>
+    <div class="call-stage">
+      <div class="wave-rings" aria-hidden="true"><i></i><i></i><i></i></div>
+      <button class="call-mushroom" id="call-mushroom" type="button" aria-label="Sentuh MyraAi untuk menyela"></button>
+    </div>
+    <p class="call-label" id="call-label"></p>
     <p class="sr-only" id="call-live" aria-live="polite"></p>
     <div class="call-controls">
-      <button class="round mic" id="call-mute" aria-pressed="false" aria-label="Matikan mikrofon">
-        <svg class="on" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>
-        <svg class="off" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3M3 3l18 18"/></svg>
+      <button class="round mic" id="call-mute" type="button" aria-pressed="false" aria-label="Matikan mikrofon">
+        <svg class="i on"><use href="#i-mic"/></svg><svg class="i off"><use href="#i-mic-off"/></svg>
       </button>
-      <button class="round end" id="call-end" aria-label="Akhiri telepon">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M12 9c-3.2 0-6.2.8-8.4 2.4-.6.5-.8 1.300-.4 2l1.300 2.100c.4.600 1.100.800 1.800.500l2.500-1.200c.500-.2.800-.7.800-1.200V12c1.200-.4 2.800-.4 4 0v1.600c0 .5.300 1 .8 1.200l2.500 1.200c.7.300 1.400.1 1.800-.5l1.300-2.100c.4-.7.200-1.500-.4-2C18.200 9.800 15.200 9 12 9z"/></svg>
-      </button>
+      <button class="round end" id="call-end" type="button" aria-label="Akhiri telepon"><svg class="i"><use href="#i-phone-end"/></svg></button>
     </div>
   </div>
 

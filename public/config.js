@@ -25,7 +25,7 @@ export const CONFIG = {
 
   LIMITS: {
     MAX_IMAGE_MB: 20,           // batas file asli yang boleh dipilih
-    UPLOAD_TARGET_MB: 3,        // hasil kompres yang dikirim (batas body Vercel 4,5 MB)
+    UPLOAD_TARGET_MB: 2.2,      // hasil kompres yang dikirim (base64 +33%, batas body Vercel 4,5 MB)
     MAX_MESSAGE_CHARS: 4000,
     SEND_COOLDOWN_MS: 2500,     // jeda tombol kirim
     MAX_PER_MINUTE: 8,          // maksimal pesan per menit di sisi client
@@ -35,9 +35,9 @@ export const CONFIG = {
 
   VOICE: {
     LANG: 'id-ID',
-    PITCH: 1.3,                 // sedikit tinggi → terdengar ceria
-    RATE: 1.02,
-    MAX_SPOKEN_CHARS: 280,
+    PITCH: 1.06,                // nyaris alami; pitch tinggi membuat suara terdengar kaku/robot
+    RATE: 0.98,
+    MAX_SPOKEN_CHARS: 480,      // dibacakan utuh per kalimat, tidak dipotong di tengah
   },
 
   SECURITY: {

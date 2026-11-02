@@ -1,6 +1,6 @@
 {
   "name": "si-jamur",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "private": true,
   "type": "module",
   "description": "Si Jamur — AI web app bertema jamur, ciptaan zaenishi. Siap deploy ke Vercel.",

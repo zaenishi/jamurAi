@@ -3,9 +3,9 @@
 let uid = 0;
 
 const svg = (p) => `
-<svg class="jamur" data-state="idle" viewBox="0 0 300 340" role="img" aria-label="Si Jamur">
+<svg class="jamur" data-state="idle" viewBox="0 0 300 340" role="img" aria-label="MyraAi">
   <defs>
-    <radialGradient id="${p}cap" cx="42%" cy="28%" r="85%"><stop offset="0" stop-color="#E07A4D"/><stop offset=".55" stop-color="#B8552F"/><stop offset="1" stop-color="#7C2A22"/></radialGradient>
+    <radialGradient id="${p}cap" cx="42%" cy="28%" r="85%"><stop offset="0" stop-color="#FF9A6B"/><stop offset=".55" stop-color="#F2573F"/><stop offset="1" stop-color="#C93A47"/></radialGradient>
     <linearGradient id="${p}stem" x1="0" x2="1"><stop offset="0" stop-color="#E9D9B8"/><stop offset=".5" stop-color="#FBF3E1"/><stop offset="1" stop-color="#DCC9A2"/></linearGradient>
     <radialGradient id="${p}spot" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#FFF8E8"/><stop offset="1" stop-color="#F0DDB6"/></radialGradient>
   </defs>
@@ -15,8 +15,8 @@ const svg = (p) => `
     <path d="M104 168 C98 220 90 270 86 302 C84 322 112 330 150 330 C188 330 216 322 214 302 C210 270 202 220 196 168 Z" fill="url(#${p}stem)"/>
     <path d="M196 190 C202 230 208 270 210 300 C212 318 196 326 176 328 C196 316 194 270 190 190Z" fill="#CDB98F" opacity=".35"/>
     <g class="cap-g">
-      <ellipse cx="150" cy="166" rx="112" ry="13" fill="#5A2A1E"/>
-      <g stroke="#3d1b14" stroke-width="1.6" opacity=".5"><path d="M70 164v10M96 168v11M124 170v11M150 171v11M176 170v11M204 168v11M230 164v10"/></g>
+      <ellipse cx="150" cy="166" rx="112" ry="13" fill="#9B4A3A"/>
+      <g stroke="#6b2f26" stroke-width="1.6" opacity=".5"><path d="M70 164v10M96 168v11M124 170v11M150 171v11M176 170v11M204 168v11M230 164v10"/></g>
       <path d="M30 150 C30 70 90 22 150 22 C210 22 270 70 270 150 C270 162 250 168 150 168 C50 168 30 162 30 150 Z" fill="url(#${p}cap)"/>
       <path d="M52 92 C66 58 100 36 138 31" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="7" stroke-linecap="round"/>
       <g fill="url(#${p}spot)"><circle cx="80" cy="98" r="15"/><circle cx="150" cy="62" r="11"/><circle cx="218" cy="102" r="17"/><circle cx="122" cy="126" r="9"/><circle cx="184" cy="136" r="8"/><circle cx="56" cy="134" r="7"/><circle cx="247" cy="140" r="6"/></g>

@@ -1,46 +1,31 @@
-# Si Jamur v5 — AI Web App (Vercel)
+# Si Jamur v6 — AI Web App (Vercel)
 
 Hasil rombak Si Jamur v4 (Node.js CLI) menjadi web app: frontend statis + Vercel Serverless Functions.
 
+## Yang baru di v6
+- **Suara tidak terpotong & lebih natural**: teks dipecah per kalimat, ada jeda napas, variasi nada tipis, suara Indonesia terbaik dipilih otomatis (bisa diganti di Pengaturan), watchdog jika satu potongan macet.
+- **Tema cerah**, responsif (ponsel sampai desktop), animasi penuh (menghormati `prefers-reduced-motion`).
+- **Navbar** + halaman terpisah: Beranda, Fitur, Pembuat, Dokumentasi, Chat (`#/fitur`, `#/pembuat`, ...).
+- **Bersihkan chat** (tombol tempat sampah + dialog konfirmasi).
+- **Lebih cepat**: penyedia AI dibalap (hedged). Jika KMSR belum menjawab dalam `HEDGE_MS` atau gagal, Carpathian (lalu Pollinations) jalan paralel; yang tercepat dipakai. Sesi Carpathian di-cache, server KMSR dibangunkan lewat ping status.
+- **Analisis gambar**: gambar dikirim di request chat yang sama (tanpa `/api/upload` & `SESSION_SECRET`). Penyedia vision: Pollinations dan Carpathian.
+- **Buat gambar**: `api/image.js` (Pollinations Flux → Turbo → AI Horde). Di chat: tombol bintang, atau ketik "buatkan gambar ...".
+
 ## Struktur
 ```
-public/
-  index.html            Landing + chat + layar telepon
-  config.js             Konfigurasi modular (USE_FIREBASE, creator, batas, suara, keamanan)
-  css/style.css         Tema hutan malam
-  js/app.js             UI, chat, upload, cooldown, mode call
-  js/mushroom.js        Character engine (SVG, ekspresi, kedip, lip-sync)
-  js/parser.js          Markdown/[ALERT]/[SUCCESS]/kode → HTML aman + filter suara
-  js/voice.js           Speech-to-Text & Text-to-Speech
-  js/store.js           Cache browser (LocalStorage/IndexedDB) ⇄ Firebase
-  js/security.js        Anti-inspect (deterrent)
-api/
-  chat.js               POST /api/chat, GET /api/chat (status)
-  upload.js             POST /api/upload (1 gambar)
-  _lib/                 http.js, persona.js, kmsr.js, carpathian.js (tidak jadi route)
-vercel.json             Header keamanan + CSP
+public/  index.html, config.js, css/style.css
+         js/app.js (router, navbar, efek) · chat.js · call.js · voice.js · mushroom.js · parser.js · store.js · state.js · security.js
+api/     chat.js (POST/GET)  image.js (POST)  _lib/{http,persona,kmsr,carpathian,pollinations}.js
 ```
 
 ## Deploy
-1. `npm i -g vercel` lalu `vercel` di folder ini (atau import repo di dashboard Vercel).
-2. Set Environment Variable **`SESSION_SECRET`** (string acak ≥ 32 karakter). Wajib untuk upload gambar.
-3. Opsional: `PROVIDERS`, `CARPATHIAN_MODEL`, `CARPATHIAN_UPLOAD_PATH`, `KMSR_USER_ID`, `KMSR_TIMEOUT_MS`, `CARPATHIAN_TIMEOUT_MS`, `ATTEMPTS`, `DEBUG` (lihat `.env.example`).
-4. Uji lokal: `vercel dev`.
+1. `vercel` di folder ini (atau import repo di dashboard Vercel). Tidak ada env wajib.
+2. Opsional: lihat `.env.example`. Uji lokal: `vercel dev`.
 
-## Pindah ke Firebase
-Di `public/config.js`: isi `firebase`, set `USE_FIREBASE: true`. Aktifkan Authentication (Anonymous atau Google) dan Firestore.
-Rules minimal Firestore:
-```
-match /users/{uid} { allow read, write: if request.auth != null && request.auth.uid == uid; }
-```
-Jika Firebase gagal dimuat, app otomatis kembali ke cache browser.
-
-## Catatan penting
-- **Batas 4,5 MB body Vercel**: gambar maks 20 MB boleh dipilih, tetapi dikompres di browser ke ≤ ~3 MB sebelum dikirim.
-- **Upload stateless**: `/api/upload` membuat sesi Carpathian lalu menyegelnya (AES-256-GCM, kedaluwarsa 10 menit) menjadi token; `/api/chat` membukanya. Cookie/CSRF tidak pernah sampai ke client.
-- **Timeout**: `maxDuration` diset 60 dtk (batas aman Hobby). KMSR di Render bisa cold-start; di plan Pro/Fluid naikkan di `vercel.json` dan `*_TIMEOUT_MS`.
-- **Rate limit** server bersifat in-memory per instance (best effort). Untuk yang ketat pakai Upstash/Vercel KV.
-- **Anti-inspect hanya deterrent.** Perlindungan nyata: key/endpoint tidak ada di client, request dibatasi same-origin, CSP aktif. Pada localhost fitur ini nonaktif.
-- **Dihapus dari v4**: image generation (Pollinations/AI Horde) dan auto-download dokumen (butuh disk). Bisa ditambah sebagai `api/image.js` jika diperlukan.
-- **Link Instagram** di `config.js` memakai `instagram.com/zaenishi` — pastikan username benar.
-- Mode call: Chrome/Edge paling stabil; iOS Safari tidak mendukung fullscreen API pada elemen (layar tetap menutup penuh).
+## Catatan
+- Fitur gambar bergantung pada layanan gratis pihak ketiga (Pollinations, AI Horde, Carpathian) yang bisa berubah/limit sewaktu-waktu. Lihat log Vercel (`DEBUG=1`) bila gagal.
+- Batas body Vercel 4,5 MB: gambar dikompres di browser ke ≤ ~2,2 MB sebelum dikirim.
+- Rate limit server in-memory per instance (best effort).
+- Mode telepon: Chrome/Edge paling stabil; iOS Safari tidak mendukung fullscreen elemen.
+- Anti-inspect hanya deterrent; nonaktif di localhost.
+- Link Instagram di `config.js`: pastikan username benar.

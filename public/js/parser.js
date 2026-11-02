@@ -101,7 +101,7 @@ export function renderRich(raw) {
 
 // ── Filter suara: buang semua markup, ringkas, ramah anak ──
 const EMOJI = /[\p{Extended_Pictographic}\u200d\ufe0f]/gu;
-export function toSpeech(raw, maxChars = 280) {
+export function toSpeech(raw, maxChars = 480) {
   let hadCode = false;
   let t = String(raw ?? '')
     .replace(/```[\s\S]*?(```|$)/g, () => { hadCode = true; return ' '; })
@@ -126,7 +126,7 @@ export function toSpeech(raw, maxChars = 280) {
   const sentences = t.match(/[^.!?]+[.!?]*/g) || [t];
   let out = '', cut = false;
   for (const s of sentences) {
-    if ((out + s).length > maxChars || out.split(/[.!?]/).filter(Boolean).length >= 3) { cut = out.length > 0 || cut; if (out) break; out = s.slice(0, maxChars); cut = true; break; }
+    if ((out + s).length > maxChars || out.split(/[.!?]/).filter(Boolean).length >= 6) { cut = out.length > 0 || cut; if (out) break; out = s.slice(0, maxChars); cut = true; break; }
     out += s;
   }
   out = out.trim();

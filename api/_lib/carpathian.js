@@ -1,13 +1,12 @@
 // Provider chat 2 — Carpathian (vision). Port dari v4, disesuaikan agar stateless di serverless:
 // upload.js membuat sesi lalu menyegelnya (terenkripsi) jadi token; chat.js membuka token itu.
-import { ProviderError, CookieJar, fetchWithTimeout, parseSSE, sleep, randHex, UA, DEBUG } from './http.js';
+import { ProviderError, CookieJar, fetchWithTimeout, parseSSE, randHex, UA, DEBUG } from './http.js';
 import { buildPersona } from './persona.js';
 
 const BASE = 'https://api.carpathian.ai';
 const REFERER = 'https://carpathian.ai/chat';
 const MODEL = process.env.CARPATHIAN_MODEL || '4e069071635c5568';
 const MAX_HISTORY = 20;
-const ATTEMPTS = Math.max(1, Math.min(3, Number(process.env.ATTEMPTS) || 1));
 const STREAM_TIMEOUT = Number(process.env.CARPATHIAN_TIMEOUT_MS) || 40000;
 
 const uploadPaths = () => process.env.CARPATHIAN_UPLOAD_PATH
@@ -15,6 +14,11 @@ const uploadPaths = () => process.env.CARPATHIAN_UPLOAD_PATH
   : ['/public/ai/documents', '/public/ai/documents/upload', '/public/ai/chat/documents', '/public/ai/files'];
 
 const newSession = () => ({ jar: new CookieJar(), csrfToken: null, agreed: false, sessionId: null });
+
+// Cache sesi (CSRF + persetujuan) selama instance function masih hangat: hemat 2 request per chat.
+const SESSION_TTL = 4 * 60 * 1000;
+let CACHE = null;
+const cacheFresh = () => !!(CACHE && Date.now() - CACHE.at < SESSION_TTL);
 
 async function req(session, url, options = {}, ms = 30000) {
   const headers = { 'User-Agent': UA, Referer: REFERER, Origin: 'https://carpathian.ai', ...(options.headers || {}) };
@@ -102,16 +106,22 @@ async function uploadDocument(session, image) {
   throw new ProviderError('Upload gagal: ' + errors.join(' | '), { code: 'UPLOAD_FAILED' });
 }
 
-async function runFlow({ userMsg, history, state, voice, userName }) {
-  let session; let docIds = [];
-  if (state) { // lanjutkan sesi dari upload.js
-    session = { jar: new CookieJar(state.jar), csrfToken: state.csrf, agreed: true, sessionId: state.sessionId };
-    docIds = state.docId ? [state.docId] : [];
-  } else {
-    session = newSession();
-    await getCsrf(session);
-    await ensureAgreement(session);
-  }
+async function freshSession() {
+  const session = newSession();
+  await getCsrf(session);
+  await ensureAgreement(session);
+  CACHE = { jar: session.jar.toJSON(), csrf: session.csrfToken, at: Date.now() };
+  return session;
+}
+async function getSession() {
+  if (cacheFresh()) return { jar: new CookieJar(CACHE.jar), csrfToken: CACHE.csrf, agreed: true, sessionId: null };
+  return freshSession();
+}
+
+async function runFlow({ userMsg, history, voice, userName, image }) {
+  const session = await getSession();
+  const docIds = [];
+  if (image) docIds.push(await uploadDocument(session, image)); // upload + chat dalam satu panggilan, tanpa token
   const csrf = await getCsrf(session);
 
   const persona = buildPersona({ voice, userName });
@@ -131,43 +141,32 @@ async function runFlow({ userMsg, history, state, voice, userName }) {
     body: JSON.stringify(body),
   }, STREAM_TIMEOUT);
 
-  if (res.status === 428) throw new ProviderError('Agreement required', { code: 'AGREEMENT_REQUIRED', retryable: true, retryAfter: 1500 });
+  if (res.status === 428) throw new ProviderError('Agreement required', { code: 'AGREEMENT_REQUIRED', retryable: true });
   if (res.status === 429) throw rateErr(res, 'Rate limited');
-  if (res.status >= 500) throw new ProviderError(`Server ${res.status}`, { code: `SERVER_${res.status}`, retryable: true, retryAfter: 2000 });
+  if (res.status >= 500) throw new ProviderError(`Server ${res.status}`, { code: `SERVER_${res.status}`, retryable: true });
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
     throw new ProviderError(`HTTP ${res.status}: ${txt.slice(0, 120)}`, { code: `HTTP_${res.status}` });
   }
   const { text } = await parseSSE(res.body);
-  if (!text.trim()) throw new ProviderError('Empty stream', { code: 'EMPTY_STREAM', retryable: true, retryAfter: 1200 });
+  if (!text.trim()) throw new ProviderError('Empty stream', { code: 'EMPTY_STREAM', retryable: true });
   return { text };
 }
 
 export const carpathian = {
   name: 'carpathian',
   supportsImages: true,
-
-  // Dipanggil upload.js → kembalikan state yang akan disegel jadi token
-  async prepareUpload(image) {
-    const session = newSession();
-    await getCsrf(session);
-    await ensureAgreement(session);
-    const docId = await uploadDocument(session, image);
-    return { jar: session.jar.toJSON(), csrf: session.csrfToken, sessionId: session.sessionId, docId };
-  },
-
-  async chat(userMsg, history, { voice, userName, state } = {}) {
-    const errors = [];
-    for (let i = 1; i <= ATTEMPTS; i++) {
-      try {
-        if (DEBUG) console.log(`[carpathian ${i}/${ATTEMPTS}]`);
-        return await runFlow({ userMsg, history, state, voice, userName });
-      } catch (e) {
-        errors.push(`#${i} [${e.code || 'ERR'}] ${e.message}`);
-        if (!(e.retryable ?? true) || i === ATTEMPTS) break;
-        await sleep(e.retryAfter || 2000 * i);
-      }
+  async chat(userMsg, history, { voice, userName, image } = {}) {
+    const args = { userMsg, history, voice, userName, image };
+    const usedCache = cacheFresh();
+    try {
+      if (DEBUG) console.log('[carpathian]');
+      return await runFlow(args);
+    } catch (e) {
+      // sesi cache bisa basi → buang, ulangi sekali dengan sesi baru
+      if (!usedCache || e.code === 'RATE_LIMIT') throw new Error(`[${e.code || 'ERR'}] ${e.message}`);
+      CACHE = null;
+      try { return await runFlow(args); } catch (e2) { throw new Error(`[${e2.code || 'ERR'}] ${e2.message}`); }
     }
-    throw new Error('Carpathian gagal: ' + errors.join(' | '));
   },
 };
