@@ -1,4 +1,4 @@
-// Mode telepon: layar penuh, bicara dua arah dengan MyraAi.
+// Mode telepon: layar penuh, bicara dua arah dengan Myra.
 import { CONFIG } from '../config.js';
 import { S, $, toast, sleep, reduceMotion } from './state.js';
 import { toSpeech } from './parser.js';
@@ -9,7 +9,7 @@ import { api, pushHistory, voiceOpts, renderThread } from './chat.js';
 const L = CONFIG.LIMITS;
 const call = { open: false, muted: false, rec: null, tts: null, m: null, busy: false, stage: 'idle', ask: null };
 
-const LABELS = { listen: 'MyraAi mendengarkan…', think: 'MyraAi sedang berpikir…', talk: 'MyraAi berbicara', idle: 'Mikrofon mati. Ketuk ikon mic untuk bicara.' };
+const LABELS = { listen: 'Myra mendengarkan…', think: 'Myra sedang berpikir…', talk: 'Myra berbicara', idle: 'Mikrofon mati. Ketuk ikon mic untuk bicara.' };
 function setCall(stage) {
   call.stage = stage; $('#call').dataset.s = stage;
   $('#call-live').textContent = LABELS[stage] || ''; $('#call-label').textContent = LABELS[stage] || '';
@@ -31,7 +31,7 @@ export async function startCall(ev, ensureProfile) {
   if (!call.open) return;
   call.m.happy(2200);
   const name = S.profile?.name ? ` ${S.profile.name}` : '';
-  say(`Halo${name}! Aku MyraAi. Mau ngobrol apa?`, () => listenLoop());
+  say(`Halo${name}! Aku Myra. Mau ngobrol apa?`, () => listenLoop());
 }
 
 function say(text, then) {
@@ -89,7 +89,7 @@ export function endCall() {
   if (S.route === 'chat') renderThread();
 }
 
-// ketuk MyraAi untuk menyela saat dia bicara
+// ketuk Myra untuk menyela saat dia bicara
 export function interrupt() { if (call.stage === 'talk') { call.tts?.cancel(); stopSpeaking(); call.m.stopTalk(); listenLoop(); } }
 export const callOpen = () => call.open;
 

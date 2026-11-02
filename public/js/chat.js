@@ -76,7 +76,7 @@ export async function api(path, body, ms = 62000) {
     if (!r.ok) throw new Error(j.error || `Kesalahan ${r.status}`);
     return j;
   } catch (e) {
-    throw new Error(e.name === 'AbortError' ? 'MyraAi terlalu lama berpikir. Coba lagi ya.' : e.message || 'Koneksi bermasalah.');
+    throw new Error(e.name === 'AbortError' ? 'Myra terlalu lama berpikir. Coba lagi ya.' : e.message || 'Koneksi bermasalah.');
   } finally { clearTimeout(t); }
 }
 
@@ -118,7 +118,7 @@ const releaseImage = () => { S.image = null; $('#attach-chip').hidden = true; $(
 // ───────── mode buat gambar ─────────
 function refreshPlaceholder() {
   const narrow = innerWidth < 640;
-  $('#input').placeholder = S.genMode ? (narrow ? 'Deskripsikan gambarnya…' : 'Deskripsikan gambar yang ingin dibuat…') : (narrow ? 'Tulis pesan…' : 'Tulis pesan untuk MyraAi…');
+  $('#input').placeholder = S.genMode ? (narrow ? 'Deskripsikan gambarnya…' : 'Deskripsikan gambar yang ingin dibuat…') : (narrow ? 'Tulis pesan…' : 'Tulis pesan untuk Myra…');
 }
 export function setGenMode(on) {
   S.genMode = !!on; $('#btn-genimg').setAttribute('aria-pressed', String(S.genMode));
@@ -137,7 +137,7 @@ async function generateImage(rawText) {
   const prompt = cleanPrompt(rawText); const ratio = ratioOf(rawText);
   addUser(rawText);
   const ai = addAi(); ai.row.classList.add('typing'); ai.m.think();
-  ai.b.innerHTML = `<div class="paint"><div class="paint-box ${ratio}"><i></i><i></i><i></i></div><p class="muted">MyraAi lagi melukis. Biasanya 10 sampai 30 detik…</p></div>`;
+  ai.b.innerHTML = `<div class="paint"><div class="paint-box ${ratio}"><i></i><i></i><i></i></div><p class="muted">Myra lagi melukis. Biasanya 10 sampai 30 detik…</p></div>`;
   cooldown(L.SEND_COOLDOWN_MS);
   try {
     const { image } = await api('/api/image', { prompt, ratio }, 62000);

@@ -12,8 +12,8 @@ initSecurity(CONFIG.SECURITY);
 // ───────── routing (hash) ─────────
 const ROUTES = { '': 'home', home: 'home', fitur: 'fitur', pembuat: 'pembuat', dokumentasi: 'dokumentasi', chat: 'chat' };
 const TITLES = {
-  home: 'MyraAi — teman ngobrol AI yang ceria', fitur: 'Fitur — MyraAi', pembuat: 'Pembuat — MyraAi',
-  dokumentasi: 'Dokumentasi — MyraAi', chat: 'Chat — MyraAi',
+  home: 'Myra — teman ngobrol AI yang ceria', fitur: 'Fitur — Myra', pembuat: 'Pembuat — Myra',
+  dokumentasi: 'Dokumentasi — Myra', chat: 'Chat — Myra',
 };
 const parseRoute = () => ROUTES[location.hash.replace(/^#\/?/, '').split(/[?/]/)[0].toLowerCase()] ?? 'home';
 
@@ -196,7 +196,7 @@ async function init() {
   $('#set-rate').oninput = (e) => { $('#set-rate-val').textContent = fmtRate(e.target.value); };
   $('#btn-test-voice').onclick = () => {
     stopSpeaking();
-    speak('Halo! Aku MyraAi. Begini kira-kira suaraku, enak didengar, kan?', {
+    speak('Halo! Aku Myra. Begini kira-kira suaraku, enak didengar, kan?', {
       lang: CONFIG.VOICE.LANG, pitch: CONFIG.VOICE.PITCH, rate: Number($('#set-rate').value) * CONFIG.VOICE.RATE, voiceURI: $('#set-voice').value,
     });
   };

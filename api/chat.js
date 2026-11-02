@@ -53,6 +53,6 @@ export default async function handler(req, res) {
     return sendJson(res, 200, { reply: text, provider });
   } catch (e) {
     console.error('Semua provider gagal:', e.message);
-    return sendJson(res, 502, { error: opts.image ? 'Si Jamur belum bisa membaca gambar ini. Coba gambar lain atau ulangi sebentar lagi.' : 'Si Jamur lagi kesulitan menjawab. Coba lagi sebentar ya.' });
+    return sendJson(res, 502, { error: opts.image ? 'Myra belum bisa membaca gambar ini. Coba gambar lain atau ulangi sebentar lagi.' : 'Myra lagi kesulitan menjawab. Coba lagi sebentar ya.' });
   }
 }

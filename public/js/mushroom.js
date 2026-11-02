@@ -3,7 +3,7 @@
 let uid = 0;
 
 const svg = (p) => `
-<svg class="jamur" data-state="idle" viewBox="0 0 300 340" role="img" aria-label="MyraAi">
+<svg class="jamur" data-state="idle" viewBox="0 0 300 340" role="img" aria-label="Myra">
   <defs>
     <radialGradient id="${p}cap" cx="42%" cy="28%" r="85%"><stop offset="0" stop-color="#FF9A6B"/><stop offset=".55" stop-color="#F2573F"/><stop offset="1" stop-color="#C93A47"/></radialGradient>
     <linearGradient id="${p}stem" x1="0" x2="1"><stop offset="0" stop-color="#E9D9B8"/><stop offset=".5" stop-color="#FBF3E1"/><stop offset="1" stop-color="#DCC9A2"/></linearGradient>

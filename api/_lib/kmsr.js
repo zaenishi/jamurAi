@@ -10,8 +10,8 @@ const TIMEOUT = Number(process.env.KMSR_TIMEOUT_MS) || 25000;
 async function attempt(userMsg, history, persona) {
   const userId = process.env.KMSR_USER_ID || randId();
   const ctx = history.slice(-MAX_HISTORY)
-    .map((m) => `${m.role === 'user' ? 'User' : 'Si Jamur'}: ${m.content}`).join('\n');
-  const prompt = [persona, ctx ? `\n--- Riwayat ---\n${ctx}` : '', `\n--- Baru ---\nUser: ${userMsg}\nSi Jamur:`].join('\n');
+    .map((m) => `${m.role === 'user' ? 'User' : 'Myra'}: ${m.content}`).join('\n');
+  const prompt = [persona, ctx ? `\n--- Riwayat ---\n${ctx}` : '', `\n--- Baru ---\nUser: ${userMsg}\nMyra:`].join('\n');
 
   const res = await fetchWithTimeout(ENDPOINT, {
     method: 'POST',
