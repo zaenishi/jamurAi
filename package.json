@@ -3,6 +3,12 @@
   "version": "4.0.0",
   "type": "module",
   "main": "server.js",
-  "scripts": { "start": "node server.js", "cli": "node index.js" },
-  "engines": { "node": ">=18" }
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "cli": "node index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
 }

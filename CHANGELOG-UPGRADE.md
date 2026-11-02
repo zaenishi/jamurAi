@@ -18,3 +18,13 @@
 ## Deliberately not implemented
 - DevTools blocking, debugger loops, right-click blocking, and console cleansing. These are bypassable and do not protect shipped client code or API secrets.
 - Multi-instance distributed rate limiting, user authentication, and durable quotas; those require Redis/KV and an account/session model.
+
+## Vercel compatibility patch
+- Added `api/[...path].js` as the Vercel Node Serverless Function entry point.
+- Exported the existing HTTP handler from `server.js`; standalone `listen()` now runs only outside Vercel.
+- Added `vercel.json` rewrite for `/` to `public/index.html`.
+- Reduced request body ceiling for serverless deployment and added browser-side image compression for vision uploads.
+- Image generation returns a data URL on Vercel instead of writing to ephemeral function storage; local behavior remains unchanged.
+- Added `VERCEL-DEPLOY.md` with GitHub import and deployment instructions.
+
+- Added root `index.html` so Vercel can serve the static entry page directly while the local server continues using `public/index.html`.

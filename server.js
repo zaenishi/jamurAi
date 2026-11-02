@@ -14,7 +14,8 @@ const PORT = Number(process.env.PORT) || 3000;
 const UA = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36';
 const DOWNLOAD_DIR = process.env.DOWNLOAD_DIR || './downloads';
 const DEBUG = !!process.env.DEBUG;
-const MAX_BODY = 35 * 1024 * 1024;
+// Vercel Functions enforce a small request-body ceiling; keep JSON payloads below it.
+const MAX_BODY = 4 * 1024 * 1024;
 const MAX_RETRIES = Math.max(1, Math.min(5, Number(process.env.ATTEMPTS) || 3));
 const PERSONA_STRICT = process.env.PERSONA_STRICT !== 'false';
 
@@ -440,7 +441,9 @@ function sendJSON(res, code, data) {
 // Process-local abuse guard. Use a shared Redis/KV limiter when deploying multiple instances.
 const rateBuckets = new Map();
 function rateLimit(req, res, { limit = 24, windowMs = 60_000 } = {}) {
-  const key = `${req.socket.remoteAddress || 'unknown'}:${req.url.split('?')[0]}`;
+  const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const clientIp = forwarded || req.socket?.remoteAddress || 'unknown';
+  const key = `${clientIp}:${req.url.split('?')[0]}`;
   const now = Date.now();
   let bucket = rateBuckets.get(key);
   if (!bucket || now >= bucket.resetAt) bucket = { count: 0, resetAt: now + windowMs };
@@ -473,7 +476,7 @@ const MIMES = {
   '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml',
 };
 
-const server = http.createServer(async (req, res) => {
+export async function handler(req, res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -506,7 +509,7 @@ const server = http.createServer(async (req, res) => {
       if (!Array.isArray(images) || !images.length) return sendJSON(res, 400, { error: 'Tidak ada gambar' });
       if (images.length > 5) return sendJSON(res, 400, { error: 'Maks 5 gambar' });
       const parsed = images.map((img, i) => {
-        if (!img.data || typeof img.data !== 'string' || img.data.length > 14 * 1024 * 1024) throw new Error(`Data gambar ${i} tidak valid atau terlalu besar`);
+        if (!img.data || typeof img.data !== 'string' || img.data.length > 700 * 1024) throw new Error(`Data gambar ${i} tidak valid atau terlalu besar (maksimal sekitar 500 KB setelah kompresi)`);
         if (!['image/jpeg', 'image/png', 'image/webp'].includes(img.mimeType || 'image/jpeg')) throw new Error(`Tipe gambar ${i} tidak didukung`);
         const buffer = Buffer.from(img.data, 'base64');
         if (buffer.length > 10 * 1024 * 1024) throw new Error(`Gambar ${i} >10MB`);
@@ -521,6 +524,11 @@ const server = http.createServer(async (req, res) => {
       const { prompt } = JSON.parse((await readBody(req, 256 * 1024)).toString());
       if (typeof prompt !== 'string' || !prompt.trim() || prompt.length > 2000) return sendJSON(res, 400, { error: 'Prompt wajib diisi (maksimal 2.000 karakter).' });
       const file = await generateImage(prompt);
+      // Serverless filesystems are ephemeral. Return generated media directly to the browser.
+      if (process.env.VERCEL) {
+        const dataUrl = `data:${file.mimeType};base64,${file.buffer.toString('base64')}`;
+        return sendJSON(res, 200, { url: dataUrl, seed: file.seed, size: file.buffer.length, storage: 'inline' });
+      }
       await mkdir(DOWNLOAD_DIR, { recursive: true });
       const hash = createHash('sha256').update(prompt).digest('hex').slice(0, 10);
       const filename = `gen-${hash}-${file.seed || Date.now()}${extFromMime(file.mimeType)}`;
@@ -560,14 +568,21 @@ const server = http.createServer(async (req, res) => {
       sendJSON(res, badRequest ? 400 : 500, { error: badRequest ? 'Permintaan tidak valid.' : 'Layanan sedang mengalami kendala. Coba lagi nanti.' });
     }
   }
-});
+}
 
-server.listen(PORT, () => {
-  console.log(`\n🍄 Si Jamur Web Server`);
-  console.log(`   Creator      : zaenishi`);
-  console.log(`   Persona Mode : ${PERSONA_STRICT ? 'STRICT 🔒' : 'relaxed'}`);
-  console.log(`   URL          : http://localhost:${PORT}`);
-  console.log(`   Health       : http://localhost:${PORT}/api/health\n`);
-});
+// Vercel imports this handler as a Serverless Function. Local development keeps
+// the original standalone HTTP server behavior.
+export default handler;
 
-process.on('unhandledRejection', (e) => console.error('[unhandled]', e));
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+  const server = http.createServer(handler);
+  server.listen(PORT, () => {
+    console.log(`\n🍄 Si Jamur Web Server`);
+    console.log(`   Creator      : zaenishi`);
+    console.log(`   Persona Mode : ${PERSONA_STRICT ? 'STRICT 🔒' : 'relaxed'}`);
+    console.log(`   URL          : http://localhost:${PORT}`);
+    console.log(`   Health       : http://localhost:${PORT}/api/health\n`);
+  });
+}
+
+if (!process.env.VERCEL) process.on('unhandledRejection', (e) => console.error('[unhandled]', e));

@@ -68,3 +68,7 @@ Node HTTP server (validation, limits, security headers)
 ```
 
 Markdown diparse ke DOM, lalu disanitasi dengan DOMPurify sebelum ditampilkan. Syntax highlighting hanya diterapkan pada elemen `pre > code`. Tombol copy menyalin `textContent`, bukan HTML. Konten suara dibuat terpisah melalui `cleanForSpeech()` sehingga simbol Markdown, status, tautan, dan blok kode tidak dibacakan mentah.
+
+## Deploy ke Vercel
+
+Proyek ini mendukung deployment GitHub melalui Vercel. Pastikan `vercel.json`, folder `api/`, `server.js`, dan `public/` berada di root repository. Lihat [VERCEL-DEPLOY.md](./VERCEL-DEPLOY.md) untuk langkah deployment, environment variables, dan batasan serverless.
