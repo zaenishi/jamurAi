@@ -2,6 +2,12 @@
 // kerahasiaan sebenarnya dijaga oleh proxy /api (tidak ada key/endpoint di client).
 export function initSecurity(cfg) {
   if (!cfg.ANTI_INSPECT) return;
+  // Mode debug: buka situs dengan ?debug=1 untuk menonaktifkan anti-inspect (console & Network jadi normal). ?debug=0 untuk mematikan.
+  try {
+    const q = new URLSearchParams(location.search).get('debug');
+    if (q === '1') localStorage.setItem('myra_debug', '1'); else if (q === '0') localStorage.removeItem('myra_debug');
+    if (localStorage.getItem('myra_debug') === '1') return;
+  } catch {}
   const local = ['localhost', '127.0.0.1', ''].includes(location.hostname);
   if (local && cfg.DISABLE_ON_LOCALHOST) return;
 

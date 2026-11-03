@@ -1,24 +1,32 @@
-// POST /api/image { prompt, ratio: 'square'|'wide'|'tall' } → { image: 'data:image/...;base64,...' }
-// Beberapa penyedia gambar gratis dibalap: Pollinations (Flux) → Pollinations (Turbo) → AI Horde.
+// POST /api/image { prompt, ratio: 'square'|'wide'|'tall' } → { image: 'data:image/...;base64,...', provider }
+// Penyedia dibalap: Pollinations (gen.pollinations.ai, kunci opsional) → Pollinations endpoint lama → AI Horde.
 import { sendJson, rateLimit, clientIp, sameOrigin, fetchWithTimeout, raceProviders, sleep, ProviderError } from './_lib/http.js';
-
 
 const SIZES = { square: [1024, 1024], wide: [1280, 720], tall: [720, 1280] };
 const seed = () => Math.floor(Math.random() * 1e9);
 
-async function pollinationsImage(prompt, [w, h], model, ms) {
-  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed()}&model=${model}&nologo=true&private=true&safe=true`;
-  const res = await fetchWithTimeout(url, { headers: { Accept: 'image/*' } }, ms);
-  const ct = res.headers.get('content-type') || '';
-  if (!res.ok || !ct.startsWith('image/')) throw new ProviderError(`HTTP ${res.status} ${ct}`, { code: 'BAD_IMAGE' });
+async function fetchImage(url, ms, withAuth) {
+  const headers = { Accept: 'image/*' };
+  if (withAuth && process.env.POLLINATIONS_API_KEY) headers.Authorization = `Bearer ${process.env.POLLINATIONS_API_KEY}`;
+  const res = await fetchWithTimeout(url, { headers }, ms);
+  const ct = (res.headers.get('content-type') || '').split(';')[0];
+  if (!res.ok || !ct.startsWith('image/')) {
+    const txt = ct.startsWith('image/') ? '' : await res.text().catch(() => '');
+    throw new ProviderError(`HTTP ${res.status} ${ct} ${txt.replace(/\s+/g, ' ').slice(0, 100)}`.trim(), { code: `HTTP_${res.status}` });
+  }
   const buf = Buffer.from(await res.arrayBuffer());
   if (buf.length < 2000) throw new ProviderError('Gambar kosong', { code: 'EMPTY' });
-  return `data:${ct.split(';')[0]};base64,${buf.toString('base64')}`;
+  return `data:${ct};base64,${buf.toString('base64')}`;
 }
 
+const pollinationsGen = (prompt, [w, h]) =>
+  fetchImage(`https://gen.pollinations.ai/image/${encodeURIComponent(prompt)}?model=${process.env.POLLINATIONS_IMAGE_MODEL || 'flux'}&width=${w}&height=${h}&seed=${seed()}&nologo=true&safe=true`, 45000, true);
+const pollinationsLegacy = (prompt, [w, h]) =>
+  fetchImage(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&seed=${seed()}&model=flux&nologo=true&private=true&safe=true`, 35000, false);
+
 async function hordeImage(prompt, [w, h], budgetMs) {
-  const H = { apikey: '0000000000', 'Content-Type': 'application/json', 'Client-Agent': 'si-jamur:5:web' };
-  const fit = (n) => Math.max(256, Math.min(768, Math.round((n / Math.max(w, h)) * 640 / 64) * 64));
+  const H = { apikey: '0000000000', 'Content-Type': 'application/json', 'Client-Agent': 'myra-ai:6:web' };
+  const fit = (n) => Math.max(256, Math.min(768, Math.round(((n / Math.max(w, h)) * 640) / 64) * 64));
   const res = await fetchWithTimeout('https://aihorde.net/api/v2/generate/async', {
     method: 'POST', headers: H,
     body: JSON.stringify({ prompt, params: { width: fit(w), height: fit(h), steps: 22, n: 1, sampler_name: 'k_euler_a' }, nsfw: false, censor_nsfw: true, r2: false, slow_workers: true }),
@@ -37,16 +45,16 @@ async function hordeImage(prompt, [w, h], budgetMs) {
   throw new ProviderError('Horde terlalu lama', { code: 'TIMEOUT' });
 }
 
-const PROVIDERS = [
-  { name: 'pollinations-flux', run: (p, s) => pollinationsImage(p, s, 'flux', 30000) },
-  { name: 'pollinations-turbo', run: (p, s) => pollinationsImage(p, s, 'turbo', 25000) },
+export const IMAGE_PROVIDERS = [
+  { name: 'pollinations', run: pollinationsGen },
+  { name: 'pollinations-legacy', run: pollinationsLegacy },
   { name: 'aihorde', run: (p, s) => hordeImage(p, s, 38000) },
 ];
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return sendJson(res, 405, { error: 'Metode tidak didukung.' }); }
   if (!sameOrigin(req)) return sendJson(res, 403, { error: 'Origin tidak diizinkan.' });
-  if (!rateLimit(`image:${clientIp(req)}`, 5, 60_000)) return sendJson(res, 429, { error: 'Terlalu banyak permintaan gambar. Tunggu sebentar ya.' });
+  if (!rateLimit(`image:${clientIp(req)}`, 6, 60_000)) return sendJson(res, 429, { error: 'Terlalu banyak permintaan gambar. Tunggu sebentar ya.' });
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = null; } }
@@ -55,10 +63,10 @@ export default async function handler(req, res) {
   const size = SIZES[body?.ratio] || SIZES.square;
 
   try {
-    const { image, provider } = await raceProviders(PROVIDERS, async (p) => ({ text: '', image: await p.run(prompt, size) }), 14000);
+    const { image, provider } = await raceProviders(IMAGE_PROVIDERS, async (p) => ({ text: '', image: await p.run(prompt, size) }), 9000);
     return sendJson(res, 200, { image, provider });
   } catch (e) {
     console.error('image gagal:', e.message);
-    return sendJson(res, 502, { error: 'Gambar belum bisa dibuat sekarang. Coba lagi sebentar atau ubah deskripsinya.' });
+    return sendJson(res, 502, { error: 'Gambar belum bisa dibuat sekarang. Coba lagi sebentar atau ubah deskripsinya.', detail: (e.details || []).map((d) => `${d.provider}: ${d.code}`) });
   }
 }

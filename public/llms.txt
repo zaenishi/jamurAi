@@ -1,0 +1,12 @@
+# Myra AI
+
+> Asisten AI berbahasa Indonesia yang ramah dan cepat: tanya apa saja, coding, analisis gambar, buat gambar, dan telepon suara. Gratis, tanpa daftar.
+
+Myra AI adalah aplikasi web asisten AI berbahasa Indonesia ciptaan zaenishi. Gratis dan tanpa daftar.
+
+## Halaman
+- [Beranda](https://myraasist.vercel.app/): pengenalan Myra AI
+- [Fitur](https://myraasist.vercel.app/fitur): chat & coding, analisis gambar, pembuat gambar, telepon suara
+- [Dokumentasi](https://myraasist.vercel.app/dokumentasi): cara pakai, batas penggunaan, FAQ
+- [Pembuat](https://myraasist.vercel.app/pembuat): tentang pengembang
+- [Chat](https://myraasist.vercel.app/chat): mulai ngobrol

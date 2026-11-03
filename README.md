@@ -1,31 +1,36 @@
-# Si Jamur v6 — AI Web App (Vercel)
+# Myra AI v7
 
-Hasil rombak Si Jamur v4 (Node.js CLI) menjadi web app: frontend statis + Vercel Serverless Functions.
+Asisten AI berbahasa Indonesia ciptaan zaenishi. Frontend statis + Vercel Functions. Gratis, tanpa daftar.
 
-## Yang baru di v6
-- **Suara tidak terpotong & lebih natural**: teks dipecah per kalimat, ada jeda napas, variasi nada tipis, suara Indonesia terbaik dipilih otomatis (bisa diganti di Pengaturan), watchdog jika satu potongan macet.
-- **Tema cerah**, responsif (ponsel sampai desktop), animasi penuh (menghormati `prefers-reduced-motion`).
-- **Navbar** + halaman terpisah: Beranda, Fitur, Pembuat, Dokumentasi, Chat (`#/fitur`, `#/pembuat`, ...).
-- **Bersihkan chat** (tombol tempat sampah + dialog konfirmasi).
-- **Lebih cepat**: penyedia AI dibalap (hedged). Jika KMSR belum menjawab dalam `HEDGE_MS` atau gagal, Carpathian (lalu Pollinations) jalan paralel; yang tercepat dipakai. Sesi Carpathian di-cache, server KMSR dibangunkan lewat ping status.
-- **Analisis gambar**: gambar dikirim di request chat yang sama (tanpa `/api/upload` & `SESSION_SECRET`). Penyedia vision: Pollinations dan Carpathian.
-- **Buat gambar**: `api/image.js` (Pollinations Flux → Turbo → AI Horde). Di chat: tombol bintang, atau ketik "buatkan gambar ...".
+## Yang baru di v7
+- **Respons AI rapi**: tabel Markdown sungguhan (zebra, header, geser horizontal di ponsel), daftar bertingkat, checklist, kutipan, kode, callout. Tabel yang bentuknya berantakan ikut dirapikan. Tanpa kedipan saat mengetik.
+- **Lampiran gambar diperbaiki**: foto dikompres otomatis (≤1536px, ≤~1,4 MB), error kini jelas ("Detail teknis") + tombol **Coba lagi**, gangguan singkat diulang otomatis.
+- **Lebih cepat & tahan gagal**: penyedia `llm` (Gemini dll.) ditambah; penyedia dibalap (hedge 3,5 dtk), circuit breaker menurunkan prioritas penyedia yang baru gagal, persona & riwayat dipangkas.
+- **SEO & pratinjau WhatsApp**: halaman nyata `/`, `/fitur`, `/pembuat`, `/dokumentasi`, `/chat` (bukan lagi `#/…`), tiap halaman punya title/description/canonical/Open Graph/Twitter + JSON-LD (WebSite, WebApplication, Person, FAQPage, BreadcrumbList), `sitemap.xml`, `robots.txt`, `llms.txt`, manifest PWA, gambar OG 1200×630 (57 KB), ikon lengkap.
+- **Diagnosa**: buka `/api/health` untuk melihat penyedia mana yang hidup (teks & gambar) beserta alasan gagalnya. Tambah `?image=1` untuk uji pembuat gambar.
+
+## Langkah setelah deploy (penting)
+1. **Isi `LLM_API_KEY`** (key gratis Gemini: aistudio.google.com/apikey) di Vercel → Settings → Environment Variables. Ini langkah paling berpengaruh untuk kecepatan dan analisis gambar.
+2. **Isi `SITE_URL`** dengan domain asli (mis. `https://myra.contoh.com`), lalu redeploy. Tanpa ini canonical/OG/sitemap memakai URL bawaan `site.config.json`.
+3. Buka `/api/health?image=1`: pastikan `verdict.chat` dan `verdict.vision` tidak kosong.
+4. **Google Search Console**: tambahkan properti, kirim `https://DOMAIN/sitemap.xml`, lalu "Inspeksi URL → Minta pengindeksan" untuk tiap halaman.
+5. **WhatsApp**: pratinjau di-cache. Jika masih lama, tambahkan `?v=2` di akhir tautan saat membagikan, atau uji di developers.facebook.com/tools/debug (klik "Scrape Again").
+
+## Mengedit halaman
+Sumber HTML ada di **`src/index.src.html`** (jangan edit `public/*.html`, itu hasil build). Setelah mengubah: `node scripts/build.mjs`. Vercel menjalankannya otomatis saat deploy. Judul/deskripsi tiap halaman ada di `scripts/build.mjs` (objek `PAGES`).
+
+## Debug
+Anti-inspect (`security.js`) menonaktifkan console/Network. Buka situs dengan **`?debug=1`** untuk mematikannya di browser kamu (`?debug=0` untuk mengembalikan). Error API juga tampil di chat sebagai "Detail teknis".
 
 ## Struktur
 ```
-public/  index.html, config.js, css/style.css
-         js/app.js (router, navbar, efek) · chat.js · call.js · voice.js · mushroom.js · parser.js · store.js · state.js · security.js
-api/     chat.js (POST/GET)  image.js (POST)  _lib/{http,persona,kmsr,carpathian,pollinations}.js
+src/index.src.html   template halaman
+scripts/build.mjs    build → public/*.html, sitemap, robots, llms, manifest
+public/              css, js, aset (og-image.jpg, ikon), config.js
+api/                 chat.js · image.js · health.js · _lib/{llm,kmsr,carpathian,pollinations,persona,http}.js
 ```
 
-## Deploy
-1. `vercel` di folder ini (atau import repo di dashboard Vercel). Tidak ada env wajib.
-2. Opsional: lihat `.env.example`. Uji lokal: `vercel dev`.
-
 ## Catatan
-- Fitur gambar bergantung pada layanan gratis pihak ketiga (Pollinations, AI Horde, Carpathian) yang bisa berubah/limit sewaktu-waktu. Lihat log Vercel (`DEBUG=1`) bila gagal.
-- Batas body Vercel 4,5 MB: gambar dikompres di browser ke ≤ ~2,2 MB sebelum dikirim.
-- Rate limit server in-memory per instance (best effort).
-- Mode telepon: Chrome/Edge paling stabil; iOS Safari tidak mendukung fullscreen elemen.
-- Anti-inspect hanya deterrent; nonaktif di localhost.
-- Link Instagram di `config.js`: pastikan username benar.
+- Layanan keyless (KMSR, Carpathian, Pollinations tanpa key) dikelola pihak ketiga dan bisa berubah/dibatasi kapan saja; karena itu `LLM_API_KEY` disarankan.
+- Link LinkedIn di `public/config.js` tampak salah (`linkedin.com/zaenishi/` → seharusnya `linkedin.com/in/zaenishi/`); tautan itu dilewati dari data terstruktur sampai diperbaiki.
+- Batas body Vercel 4,5 MB; rate limit server in-memory per instance (best effort).

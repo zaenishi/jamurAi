@@ -9,31 +9,21 @@ import { ttsSupported, speak, listVoices, stopSpeaking } from './voice.js';
 
 initSecurity(CONFIG.SECURITY);
 
-// ───────── routing (hash) ─────────
-const ROUTES = { '': 'home', home: 'home', fitur: 'fitur', pembuat: 'pembuat', dokumentasi: 'dokumentasi', chat: 'chat' };
-const TITLES = {
-  home: 'Myra — teman ngobrol AI', fitur: 'Fitur — Myra', pembuat: 'Pembuat — Myra',
-  dokumentasi: 'Dokumentasi — Myra', chat: 'Chat — Myra',
-};
-const parseRoute = () => ROUTES[location.hash.replace(/^#\/?/, '').split(/[?/]/)[0].toLowerCase()] ?? 'home';
-
+// ───────── halaman (multi-halaman; rute dari <body data-route>) ─────────
 let whoM = null;
-async function route() {
-  const r = parseRoute();
-  if (r === 'chat' && !S.profile) await askName();
-  S.route = r; document.body.dataset.route = r; document.title = TITLES[r];
-  for (const sec of $$('.page')) {
-    const on = sec.dataset.page === r;
-    if (on && sec.hidden) { sec.hidden = false; sec.style.animation = 'none'; void sec.offsetHeight; sec.style.animation = ''; }
-    else if (!on) sec.hidden = true;
-  }
-  for (const a of $$('[data-route]')) a.classList.toggle('on', a.dataset.route === r);
-  closeDrawer(); movePill();
+async function enterRoute() {
+  const r = document.body.dataset.route; S.route = r;
+  // tautan lama berbasis hash (#/chat) → alamat baru (/chat)
+  const legacy = location.hash.match(/^#\/(fitur|pembuat|dokumentasi|chat)\/?$/);
+  if (legacy) { location.replace('/' + legacy[1]); return; }
+  for (const a of $$('a[data-route]')) { const on = a.dataset.route === r; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
+  movePill(); onScroll();
   if (r === 'chat') {
-    window.scrollTo(0, 0); renderThread(); checkStatus();
+    if (!S.profile) await askName();
+    renderThread(); checkStatus();
     whoM ||= createMushroom($('#who-av'), { track: false }); whoM.happy(1800);
     if (matchMedia('(pointer:fine)').matches) $('#input').focus({ preventScroll: true });
-  } else { window.scrollTo({ top: 0, behavior: 'auto' }); onScroll(); }
+  }
   heroDemoToggle();
 }
 
@@ -115,6 +105,7 @@ async function runDemo(token) {
   }
 }
 function heroDemoToggle() {
+  if (!$('#hero-demo')) return;
   const want = S.route === 'home' && !document.hidden;
   if (want && !demoToken) { if (reduceMotion) { const b = $('#hero-demo'); b.querySelector('.d-user').textContent = DEMOS[0].q; b.querySelector('.d-ai').textContent = DEMOS[0].a; b.querySelectorAll('div').forEach((x) => x.classList.add('show')); return; } demoToken = Date.now(); runDemo(demoToken); }
   else if (!want && demoToken) demoToken = 0;
@@ -122,7 +113,7 @@ function heroDemoToggle() {
 
 // ───────── status AI ─────────
 async function checkStatus() {
-  const el = $('#status');
+  const el = $('#status'); if (!el) return;
   try {
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 6000);
     const r = await fetch('/api/chat', { cache: 'no-store', signal: ctl.signal }); clearTimeout(t);
@@ -135,7 +126,7 @@ async function checkStatus() {
 // ───────── profil & pengaturan ─────────
 function greet() {
   const h = $('#hello');
-  if (S.profile?.name) { h.hidden = false; h.textContent = `Selamat datang kembali, ${S.profile.name}.`; }
+  if (h && S.profile?.name) { h.hidden = false; h.textContent = `Selamat datang kembali, ${S.profile.name}.`; }
 }
 async function askName() {
   const d = $('#dlg-welcome'); const wm = createMushroom($('#welcome-mushroom'), { track: false }); wm.happy(2500);
@@ -170,43 +161,48 @@ function askClear() {
 }
 
 // ───────── init ─────────
+const on = (sel, prop, fn) => { const el = $(sel); if (el) el[prop] = fn; return el; };
 async function init() {
   spores(); reveals(); tilt();
-  heroM = createMushroom($('#hero-mushroom'));
-  $('#hero-mushroom').onclick = () => heroM.happy(1600);
-  setTimeout(() => heroM.happy(1800), 700);
-
-  $('#creator-name').textContent = $('#creator-name-2').textContent = CONFIG.CREATOR.name; $('#creator-bio').textContent = CONFIG.CREATOR.bio;
-  for (const l of CONFIG.CREATOR.links) {
-    const li = document.createElement('li'); const a = document.createElement('a');
-    a.href = l.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
-    a.innerHTML = icon(/instagram/i.test(l.label) ? 'instagram' : 'link'); a.append(l.label); li.append(a); $('#creator-links').append(li);
+  if ($('#hero-mushroom')) {
+    heroM = createMushroom($('#hero-mushroom'));
+    $('#hero-mushroom').onclick = () => heroM.happy(1600);
+    setTimeout(() => heroM.happy(1800), 700);
+  }
+  if ($('#creator-name')) {
+    $('#creator-name').textContent = $('#creator-name-2').textContent = CONFIG.CREATOR.name; $('#creator-bio').textContent = CONFIG.CREATOR.bio;
+    for (const l of CONFIG.CREATOR.links) {
+      const li = document.createElement('li'); const a = document.createElement('a');
+      a.href = l.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.innerHTML = icon(/instagram/i.test(l.label) ? 'instagram' : 'link'); a.append(l.label); li.append(a); $('#creator-links').append(li);
+    }
   }
 
   S.store = await createStore(CONFIG);
   S.profile = await S.store.getProfile(); S.history = await S.store.getHistory(); S.tts = !!S.profile?.tts;
   greet(); checkStatus(); setInterval(checkStatus, 60000);
 
-  initChat(); initCall();
+  if ($('#page-chat')) initChat();
+  initCall();
   const ensureProfile = async () => { if (!S.profile) await askName(); };
-  $('#btn-call-hero').onclick = (e) => startCall(e, ensureProfile);
-  $('#btn-call-top').onclick = (e) => startCall(e, ensureProfile);
-  $('#btn-clear-chat').onclick = askClear;
-  $('#btn-settings').onclick = openSettings;
-  $('#set-rate').oninput = (e) => { $('#set-rate-val').textContent = fmtRate(e.target.value); };
-  $('#btn-test-voice').onclick = () => {
+  on('#btn-call-hero', 'onclick', (e) => startCall(e, ensureProfile));
+  on('#btn-call-top', 'onclick', (e) => startCall(e, ensureProfile));
+  on('#btn-clear-chat', 'onclick', askClear);
+  on('#btn-settings', 'onclick', openSettings);
+  on('#set-rate', 'oninput', (e) => { $('#set-rate-val').textContent = fmtRate(e.target.value); });
+  on('#btn-test-voice', 'onclick', () => {
     stopSpeaking();
-    speak('Halo! Aku Myra.', {
+    speak('Halo! Aku Myra. Begini kira-kira suaraku, enak didengar, kan?', {
       lang: CONFIG.VOICE.LANG, pitch: CONFIG.VOICE.PITCH, rate: Number($('#set-rate').value) * CONFIG.VOICE.RATE, voiceURI: $('#set-voice').value,
     });
-  };
-  $('#form-settings').onsubmit = async () => {
+  });
+  on('#form-settings', 'onsubmit', async () => {
     S.profile ||= { name: '', created: Date.now() };
     S.profile.name = $('#set-name').value.trim().slice(0, 30); S.profile.tts = $('#set-tts').checked; S.tts = S.profile.tts;
     S.profile.voice = $('#set-voice').value; S.profile.rate = Number($('#set-rate').value);
     await S.store.saveProfile(S.profile); greet(); stopSpeaking(); toast('Pengaturan disimpan.', true);
-  };
-  $('#btn-clear').onclick = () => { $('#dlg-settings').close(); askClear(); };
+  });
+  on('#btn-clear', 'onclick', () => { $('#dlg-settings').close(); askClear(); });
   for (const d of $$('dialog')) d.addEventListener('click', (e) => { if (e.target === d && d.id !== 'dlg-welcome') d.close(); });
 
   // salin kode (delegasi)
@@ -221,11 +217,10 @@ async function init() {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
   addEventListener('scroll', onScroll, { passive: true });
   addEventListener('resize', () => { movePill(); onScroll(); });
-  addEventListener('hashchange', route);
   document.addEventListener('visibilitychange', heroDemoToggle);
   addEventListener('pagehide', () => stopSpeaking());
   if (document.fonts?.ready) document.fonts.ready.then(movePill);
 
-  await route();
+  await enterRoute();
 }
 init();

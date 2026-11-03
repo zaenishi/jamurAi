@@ -160,9 +160,10 @@ export function sniffImage(buf) {
 // Mulai provider pertama. Jika belum selesai setelah `hedgeMs`, ATAU gagal, langsung mulai provider
 // berikutnya tanpa menunggu yang pertama. Yang pertama berhasil menang.
 export function raceProviders(providers, call, hedgeMs = 6000) {
+  if (!providers.length) return Promise.reject(Object.assign(new Error('Tidak ada provider'), { details: [] }));
   return new Promise((resolve, reject) => {
     let started = 0, failed = 0, done = false, timer = null;
-    const errors = [];
+    const errors = [], details = [];
     const startNext = () => {
       if (done || started >= providers.length) return;
       const p = providers[started++];
@@ -172,9 +173,9 @@ export function raceProviders(providers, call, hedgeMs = 6000) {
         if (done) return;
         done = true; clearTimeout(timer); resolve({ ...r, provider: p.name });
       }).catch((e) => {
-        errors.push(`[${p.name}] ${e.message}`); failed++;
+        errors.push(`[${p.name}] ${e.message}`); details.push({ provider: p.name, code: e.code || 'ERR', message: String(e.message).slice(0, 160) }); failed++;
         if (done) return;
-        if (failed >= providers.length) { done = true; clearTimeout(timer); reject(new Error(errors.join(' || '))); }
+        if (failed >= providers.length) { done = true; clearTimeout(timer); const err = new Error(errors.join(' || ')); err.details = details; reject(err); }
         else startNext();
       });
     };

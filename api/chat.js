@@ -1,29 +1,37 @@
-// POST /api/chat → { reply }      GET /api/chat → { ok: true } (indikator status + membangunkan server KMSR)
+// POST /api/chat → { reply, provider }      GET /api/chat → { ok, providers } (status + membangunkan server KMSR)
+// Kecepatan & keandalan: penyedia dibalap (hedged) + circuit breaker (penyedia yang baru gagal diturunkan prioritasnya).
 import { sendJson, rateLimit, clientIp, sameOrigin, sniffImage, raceProviders } from './_lib/http.js';
+import { llm } from './_lib/llm.js';
 import { kmsr, warmKmsr } from './_lib/kmsr.js';
 import { carpathian } from './_lib/carpathian.js';
 import { pollinations } from './_lib/pollinations.js';
 
-const REGISTRY = { kmsr, carpathian, pollinations };
-const ORDER = (process.env.PROVIDERS || 'kmsr,carpathian,pollinations')
-  .split(',').map((s) => s.trim()).filter((n) => REGISTRY[n]);
-
-// ⬇ DIPERCEPAT: 6s→3.5s (text), 9s→2.5s (gambar) supaya fallback cepat mulai
-const HEDGE_TEXT  = Number(process.env.HEDGE_MS)        || 3500;
-const HEDGE_IMAGE = Number(process.env.HEDGE_IMG_MS)    || 2500;
-
+const REGISTRY = { llm, kmsr, carpathian, pollinations };
+const DEFAULT_ORDER = 'llm,kmsr,carpathian,pollinations';
+const configured = () => (process.env.PROVIDERS || DEFAULT_ORDER).split(',').map((s) => s.trim()).filter((n) => REGISTRY[n]);
+const active = () => configured().map((n) => REGISTRY[n]).filter((p) => p.available ? p.available() : true);
+const HEDGE_MS = Number(process.env.HEDGE_MS) || 3500;
 const MAX_MSG = 4000;
 const MAX_IMG_BYTES = 3.2 * 1024 * 1024;
 
-const cleanHistory = (h) => (Array.isArray(h) ? h : []).slice(-20)
-  .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
-  .map((m) => ({ role: m.role, content: m.content.slice(0, 6000) }));
+// ── circuit breaker sederhana (per instance) ──
+const health = new Map();
+const penalized = (p) => (health.get(p.name)?.until || 0) > Date.now();
+const markOk = (p) => health.delete(p.name);
+const markFail = (p) => { const h = health.get(p.name) || { fails: 0 }; h.fails++; if (h.fails >= 2) h.until = Date.now() + 90_000; health.set(p.name, h); };
+const prioritize = (list) => [...list.filter((p) => !penalized(p)), ...list.filter(penalized)];
+
+const cleanHistory = (h) => {
+  const arr = (Array.isArray(h) ? h : []).slice(-10)
+    .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string');
+  return arr.map((m, i) => ({ role: m.role, content: m.content.slice(0, i >= arr.length - 2 ? 3500 : 1200) }));
+};
 
 export default async function handler(req, res) {
-  if (req.method === 'GET') { await warmKmsr(); return sendJson(res, 200, { ok: ORDER.length > 0 }); }
+  if (req.method === 'GET') { await warmKmsr(); const a = active(); return sendJson(res, 200, { ok: a.length > 0, providers: a.length }); }
   if (req.method !== 'POST') { res.setHeader('Allow', 'GET, POST'); return sendJson(res, 405, { error: 'Metode tidak didukung.' }); }
   if (!sameOrigin(req)) return sendJson(res, 403, { error: 'Origin tidak diizinkan.' });
-  if (!rateLimit(`chat:${clientIp(req)}`, 15, 60_000)) return sendJson(res, 429, { error: 'Terlalu banyak permintaan. Tunggu sebentar ya.' });
+  if (!rateLimit(`chat:${clientIp(req)}`, 20, 60_000)) return sendJson(res, 429, { error: 'Terlalu banyak permintaan. Tunggu sebentar ya.' });
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = null; } }
@@ -34,7 +42,6 @@ export default async function handler(req, res) {
   const history = cleanHistory(body.history);
   const opts = { voice: body.voice === true, userName: typeof body.userName === 'string' ? body.userName : '' };
 
-  // Gambar dikirim langsung di request yang sama
   if (body.image) {
     if (typeof body.image.data !== 'string') return sendJson(res, 400, { error: 'Data gambar tidak valid.' });
     const buffer = Buffer.from(body.image.data, 'base64');
@@ -44,32 +51,26 @@ export default async function handler(req, res) {
     opts.image = { buffer, data: body.image.data, ...kind };
   }
 
-  // Hanya provider yang mendukung vision saat ada gambar
-  const providers = ORDER.map((n) => REGISTRY[n]).filter((p) => !opts.image || p.supportsImages);
-  if (!providers.length) return sendJson(res, 503, { error: 'Belum ada layanan yang bisa membaca gambar.' });
-
-  // ⬇ REVISI: untuk gambar, carpathian (vision asli) didahulukan.
-  //   pollinations hanya fallback (endpoint-nya sering tidak support vision).
-  const ordered = opts.image
-    ? [...providers].sort((a, b) =>
-        (a.name === 'carpathian' ? -1 : b.name === 'carpathian' ? 1 : 0))
-    : providers;
+  let providers = active().filter((p) => !opts.image || p.supportsImages);
+  if (opts.image) { // urutan khusus gambar: penyedia yang paling mungkin berhasil dulu
+    const rank = { llm: 0, pollinations: 1, carpathian: 2 };
+    providers = [...providers].sort((a, b) => (rank[a.name] ?? 9) - (rank[b.name] ?? 9));
+  }
+  providers = prioritize(providers);
+  if (!providers.length) return sendJson(res, 503, { error: 'Belum ada layanan AI yang aktif.' });
 
   try {
-    const { text, provider } = await raceProviders(
-      ordered,
-      (p) => p.chat(message, history, opts),
-      opts.image ? HEDGE_IMAGE : HEDGE_TEXT,
-    );
+    const { text, provider } = await raceProviders(providers, async (p) => {
+      try { const r = await p.chat(message, history, opts); markOk(p); return r; }
+      catch (e) { markFail(p); throw e; }
+    }, opts.image ? 7000 : HEDGE_MS);
     return sendJson(res, 200, { reply: text, provider });
   } catch (e) {
-    const debug = process.env.DEBUG === '1';
     console.error('Semua provider gagal:', e.message);
+    const detail = (e.details || []).map((d) => `${d.provider}: ${d.code}`);
     return sendJson(res, 502, {
-      error: opts.image
-        ? 'Myra belum bisa membaca gambar ini. Coba gambar lain atau ulangi sebentar lagi.'
-        : 'Myra lagi kesulitan menjawab. Coba lagi sebentar ya.',
-      ...(debug ? { detail: String(e.message).slice(0, 500) } : {}),
+      error: opts.image ? 'Myra belum bisa membaca gambar ini. Coba lagi sebentar, atau gunakan gambar lain.' : 'Myra lagi kesulitan menjawab. Coba lagi sebentar ya.',
+      detail,
     });
   }
 }

@@ -1,8 +1,13 @@
 {
-  "name": "si-jamur",
-  "version": "6.0.0",
+  "name": "myra-ai",
+  "version": "7.0.0",
   "private": true,
   "type": "module",
-  "description": "Si Jamur — AI web app bertema jamur, ciptaan zaenishi. Siap deploy ke Vercel.",
-  "engines": { "node": ">=18" }
+  "description": "Myra AI — asisten AI berbahasa Indonesia, ciptaan zaenishi. Siap deploy ke Vercel.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  }
 }

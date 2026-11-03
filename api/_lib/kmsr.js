@@ -3,8 +3,8 @@ import { ProviderError, fetchWithTimeout, sleep, randId, UA, DEBUG } from './htt
 import { buildPersona } from './persona.js';
 
 const ENDPOINT = 'https://chatbot-backend-kmsr.onrender.com/api/chat';
-const MAX_HISTORY = 12;
-const ATTEMPTS = Math.max(1, Math.min(3, Number(process.env.ATTEMPTS) || 1));
+const MAX_HISTORY = 10;
+const ATTEMPTS = Math.max(1, Math.min(3, Number(process.env.ATTEMPTS) || 2));
 const TIMEOUT = Number(process.env.KMSR_TIMEOUT_MS) || 25000;
 
 async function attempt(userMsg, history, persona) {
@@ -52,7 +52,7 @@ export const kmsr = {
       } catch (e) {
         errors.push(`#${i} ${e.message}`);
         if (!(e.retryable ?? true) || i === ATTEMPTS) break;
-        await sleep(e.retryAfter || 1200 * i);
+        await sleep(Math.min(e.retryAfter || 700, 1500));
       }
     }
     throw new Error('KMSR gagal: ' + errors.join(' | '));

@@ -28,7 +28,8 @@ function addAi() {
   row.append(a.el, b); $('#thread').append(row); toBottom(true);
   return { row, b, m: a.m };
 }
-const aiStatic = (text) => { const { b, m, row } = addAi(); row.classList.add('static'); b.innerHTML = renderRich(text); m.destroy(); };
+export function setRich(el, text) { el.innerHTML = renderRich(text); el.classList.toggle('has-table', !!el.querySelector('.table-wrap')); }
+const aiStatic = (text) => { const { b, m, row } = addAi(); row.classList.add('static'); setRich(b, text); m.destroy(); };
 
 export function renderThread() {
   const t = $('#thread'); t.innerHTML = ''; S.emptyM?.destroy();
@@ -47,20 +48,24 @@ export function renderThread() {
   const s = scroller(); s.scrollTop = s.scrollHeight;
 }
 
-// efek mengetik; klik bubble untuk melewati
+// efek mengetik; klik bubble untuk melewati. Baris tabel/kode yang belum lengkap tidak ditampilkan agar tidak berkedip.
+const settled = (txt) => {
+  const nl = txt.lastIndexOf('\n'); const last = txt.slice(nl + 1);
+  return /^\s*\|/.test(last) ? txt.slice(0, nl + 1) : txt;
+};
 function typeInto(bubble, full, m) {
   return new Promise((resolve) => {
-    if (reduceMotion || full.length < 4) { bubble.innerHTML = renderRich(full); return resolve(); }
+    if (reduceMotion || full.length < 4) { setRich(bubble, full); return resolve(); }
     let i = 0, skip = false;
-    const step = Math.max(3, Math.ceil(full.length / 180));
+    const step = Math.max(3, Math.ceil(full.length / 160));
     bubble.addEventListener('click', () => { skip = true; }, { once: true });
     bubble.classList.add('caret'); m?.talk();
     (function tick() {
       if (skip || i >= full.length) {
-        bubble.classList.remove('caret'); bubble.innerHTML = renderRich(full); m?.stopTalk(); m?.happy(1400); toBottom(); return resolve();
+        bubble.classList.remove('caret'); setRich(bubble, full); m?.stopTalk(); m?.happy(1400); toBottom(); return resolve();
       }
       i = Math.min(full.length, i + step);
-      bubble.innerHTML = renderRich(full.slice(0, i)); bubble.classList.add('caret'); m?.pulse(Math.random());
+      setRich(bubble, settled(full.slice(0, i))); bubble.classList.add('caret'); m?.pulse(Math.random());
       if (i % (step * 6) === 0) toBottom();
       setTimeout(tick, 14);
     })();
@@ -68,36 +73,62 @@ function typeInto(bubble, full, m) {
 }
 
 // ───────── jaringan ─────────
-export async function api(path, body, ms = 62000) {
+export class ApiError extends Error { constructor(msg, { status = 0, detail = [] } = {}) { super(msg); this.status = status; this.detail = detail; } }
+async function once(path, body, ms) {
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), ms);
   try {
     const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.error || `Kesalahan ${r.status}`);
+    if (!r.ok) throw new ApiError(j.error || `Kesalahan ${r.status}`, { status: r.status, detail: j.detail || [] });
     return j;
   } catch (e) {
-    throw new Error(e.name === 'AbortError' ? 'Myra terlalu lama berpikir. Coba lagi ya.' : e.message || 'Koneksi bermasalah.');
+    if (e instanceof ApiError) throw e;
+    throw new ApiError(e.name === 'AbortError' ? 'Myra terlalu lama berpikir. Coba lagi ya.' : 'Koneksi bermasalah. Periksa internetmu lalu coba lagi.', { status: e.name === 'AbortError' ? 408 : 0 });
   } finally { clearTimeout(t); }
+}
+// Gangguan singkat (jaringan putus sesaat / server baru bangun) diulang otomatis sekali, tanpa membuat pengguna menunggu dobel.
+export async function api(path, body, ms = 62000) {
+  const t0 = Date.now();
+  try { return await once(path, body, ms); }
+  catch (e) {
+    const transient = e.status === 0 || [502, 503, 504].includes(e.status);
+    if (!transient || Date.now() - t0 > 15000) { console.error('[myra] gagal:', path, e.status, e.message, e.detail); throw e; }
+    await new Promise((r) => setTimeout(r, 1200));
+    try { return await once(path, body, ms - (Date.now() - t0)); }
+    catch (e2) { console.error('[myra] gagal (setelah ulang):', path, e2.status, e2.message, e2.detail); throw e2; }
+  }
+}
+
+function errorHtml(e, canRetry = true) {
+  const detail = (e.detail || []).length ? `<details class="tech"><summary>Detail teknis</summary><code>${esc(e.detail.join(' · '))}</code></details>` : '';
+  const retry = canRetry ? `<button class="chip-btn" type="button" data-retry>${icon('refresh')}Coba lagi</button>` : '';
+  return renderRich('[ALERT] ' + e.message) + detail + (retry ? `<div class="err-acts">${retry}</div>` : '');
 }
 
 // ───────── gambar terlampir ─────────
 const OK_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const toB64 = (blob) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
 
+// Kompres di browser: sisi terpanjang ≤ 1536px, JPEG ≤ ~1,4 MB. Lebih kecil = unggah lebih cepat & penyedia AI lebih jarang menolak.
 async function shrink(file) {
-  const target = L.UPLOAD_TARGET_MB * 1024 * 1024;
-  if (file.size <= target && file.type !== 'image/gif') return file;
-  if (file.type === 'image/gif' && file.size <= target) return file;
-  const bmp = await createImageBitmap(file);
-  let scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
-  for (let q = 0.85, n = 0; n < 7; n++) {
-    const c = document.createElement('canvas');
-    c.width = Math.max(1, Math.round(bmp.width * scale)); c.height = Math.max(1, Math.round(bmp.height * scale));
-    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
-    const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', q));
-    if (blob && blob.size <= target) return blob;
-    q = Math.max(.5, q - .08); scale *= .85;
-  }
+  const target = Math.min(L.UPLOAD_TARGET_MB, 1.4) * 1024 * 1024;
+  if (file.type === 'image/gif' && file.size <= L.UPLOAD_TARGET_MB * 1024 * 1024) return file;
+  let bmp;
+  try { bmp = await createImageBitmap(file); }
+  catch { if (file.size <= target) return file; throw new Error('Gambar ini tidak bisa dibaca browser. Coba simpan ulang sebagai JPG atau PNG.'); }
+  const side = Math.max(bmp.width, bmp.height);
+  if (file.size <= 900 * 1024 && side <= 1600 && file.type !== 'image/gif') { bmp.close?.(); return file; }
+  let scale = Math.min(1, 1536 / side);
+  try {
+    for (let q = 0.82, n = 0; n < 7; n++) {
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(bmp.width * scale)); c.height = Math.max(1, Math.round(bmp.height * scale));
+      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+      const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', q));
+      if (blob && blob.size <= target) return blob;
+      q = Math.max(.5, q - .08); scale *= .85;
+    }
+  } finally { bmp.close?.(); }
   throw new Error('Gambar terlalu besar untuk dikompres.');
 }
 export function pickImage(file) {
@@ -148,7 +179,7 @@ async function generateImage(rawText) {
     ai.m.happy(2000);
     const im = ai.b.querySelector('img'); if (im) { im.onload = () => toBottom(true); im.decode?.().then(() => toBottom(true)).catch(() => {}); }
     pushHistory('user', rawText); pushHistory('assistant', `(Aku sudah membuatkan gambar: ${prompt})`);
-  } catch (e) { ai.m.idle(); ai.b.innerHTML = renderRich('[ALERT] ' + e.message); }
+  } catch (e) { ai.m.idle(); ai.b.innerHTML = errorHtml(e); ai.row.classList.add('failed'); }
   finally { ai.row.classList.remove('typing'); setTimeout(() => ai.m.destroy(), 2500); S.busy = false; setBusy(false); toBottom(true); }
 }
 
@@ -186,6 +217,7 @@ export async function send() {
   if (text.length > L.MAX_MESSAGE_CHARS) return toast(`Pesan maksimal ${L.MAX_MESSAGE_CHARS} karakter.`);
 
   const img = S.image;
+  S.lastReq = { text, img, gen: S.genMode };
   const wantsImage = !img && (S.genMode || looksLikeImageRequest(text));
   S.busy = true; setBusy(true); S.lastSend = Date.now(); S.sentTimes.push(S.lastSend);
   input.value = ''; autoGrow(); releaseImage();
@@ -213,7 +245,7 @@ export async function send() {
     if (spoken) speak(toSpeech(reply, CONFIG.VOICE.MAX_SPOKEN_CHARS), voiceOpts(ai.m)); // suara dimulai bersamaan dengan teks
     await typeInto(ai.b, reply, spoken ? null : ai.m);
   } catch (e) {
-    ai.m.idle(); ai.b.innerHTML = renderRich('[ALERT] ' + e.message);
+    ai.m.idle(); ai.b.innerHTML = errorHtml(e); ai.row.classList.add('failed');
   } finally {
     clearTimeout(t1); clearTimeout(t2);
     ai.row.classList.remove('typing'); setTimeout(() => ai.m.destroy(), S.tts ? 12000 : 2500); S.busy = false; setBusy(false); toBottom();
@@ -247,5 +279,12 @@ export function initChat() {
   ['dragleave', 'drop'].forEach((ev) => zone.addEventListener(ev, (e) => { if (ev === 'drop') { e.preventDefault(); pickImage(e.dataTransfer?.files?.[0]); } if (ev === 'drop' || e.target === zone) zone.classList.remove('drag'); }));
   document.addEventListener('click', (e) => {
     const r = e.target.closest('[data-regen]'); if (r && !S.busy) { $('#input').value = r.dataset.regen; send(); }
+    const t = e.target.closest('[data-retry]');
+    if (t && !S.busy && S.lastReq) {
+      const row = t.closest('.msg'); const prev = row?.previousElementSibling;
+      row?.remove(); if (prev?.classList.contains('user')) prev.remove();
+      if (S.lastReq.img) { S.image = S.lastReq.img; $('#attach-img').src = S.image.url; $('#attach-name').textContent = S.image.file.name; $('#attach-chip').hidden = false; }
+      S.lastSend = 0; if (S.lastReq.gen) setGenMode(true); $('#input').value = S.lastReq.text; send();
+    }
   });
 }

@@ -1,0 +1,50 @@
+{
+  "name": "Myra AI",
+  "short_name": "Myra",
+  "description": "Asisten AI berbahasa Indonesia yang ramah dan cepat: tanya apa saja, coding, analisis gambar, buat gambar, dan telepon suara. Gratis, tanpa daftar.",
+  "lang": "id",
+  "dir": "ltr",
+  "id": "/",
+  "start_url": "/chat",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#EAF6FF",
+  "theme_color": "#EAF6FF",
+  "categories": [
+    "productivity",
+    "utilities",
+    "education"
+  ],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mulai chat",
+      "url": "/chat",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

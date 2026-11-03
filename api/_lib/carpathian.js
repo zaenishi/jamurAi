@@ -15,8 +15,8 @@ const uploadPaths = () => process.env.CARPATHIAN_UPLOAD_PATH
 
 const newSession = () => ({ jar: new CookieJar(), csrfToken: null, agreed: false, sessionId: null });
 
-// TTL cache diperpanjang 4 menit → 10 menit supaya lebih banyak request "warm"
-const SESSION_TTL = 10 * 60 * 1000;
+// Cache sesi (CSRF + persetujuan) selama instance function masih hangat: hemat 2 request per chat.
+const SESSION_TTL = 4 * 60 * 1000;
 let CACHE = null;
 const cacheFresh = () => !!(CACHE && Date.now() - CACHE.at < SESSION_TTL);
 
@@ -78,14 +78,6 @@ async function uploadDocument(session, image) {
       const url = `${BASE}${path}${session.sessionId ? `?session_id=${encodeURIComponent(session.sessionId)}` : ''}`;
       const res = await req(session, url, { method: 'POST', headers: { 'x-csrf-token': token, Accept: 'application/json' }, body: fd }, 30000);
 
-        if (!res.ok) {
-          const txt = await res.text().catch(() => '');
-          const err = new ProviderError(
-            `Upload ${path} HTTP ${res.status}: ${txt.slice(0, 160)}`,
-            { code: `UPLOAD_${res.status}`, retryable: res.status >= 500 }
-          );
-          throw err;
-        }
       if (res.status === 404 || res.status === 405) { errors.push(`${path}: ${res.status}`); continue; }
       if (res.status === 429) throw rateErr(res, 'Upload rate limited');
       if (!res.ok) {
@@ -171,21 +163,10 @@ export const carpathian = {
       if (DEBUG) console.log('[carpathian]');
       return await runFlow(args);
     } catch (e) {
-      if (DEBUG) console.warn(`  ✗ ${e.code || 'ERR'}: ${String(e.message).slice(0, 160)}`);
-
-      // REVISI: RATE_LIMIT tetap tidak di-retry (sia-sia).
-      // Selain itu, SELALU retry sekali dengan sesi baru — termasuk untuk upload error
-      // (sebelumnya upload gagal tidak di-retry jika cache tidak dipakai).
-      if (e.code === 'RATE_LIMIT') {
-        throw new Error(`[RATE_LIMIT] ${e.message}`);
-      }
+      // sesi cache bisa basi → buang, ulangi sekali dengan sesi baru
+      if (!usedCache || e.code === 'RATE_LIMIT') throw new Error(`[${e.code || 'ERR'}] ${e.message}`);
       CACHE = null;
-      try {
-        return await runFlow(args);
-      } catch (e2) {
-        if (DEBUG) console.warn(`  ✗ retry gagal [${e2.code || 'ERR'}]: ${String(e2.message).slice(0, 160)}`);
-        throw new Error(`[${e2.code || 'ERR'}] ${e2.message}`);
-      }
+      try { return await runFlow(args); } catch (e2) { throw new Error(`[${e2.code || 'ERR'}] ${e2.message}`); }
     }
   },
 };
