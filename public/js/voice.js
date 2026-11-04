@@ -123,7 +123,7 @@ export function speak(text, { lang, pitch = 1, rate = 1, voiceURI, onStart, onBe
     u.onend = go;
     u.onerror = (e) => { if (e.error === 'canceled' || e.error === 'interrupted') { if (!cancelled) go(); return; } go(); };
     // Jaga-jaga bila onend tidak pernah terpanggil: lanjut sendiri
-    watchdog = setTimeout(() => { if (!advanced && !cancelled) go(); }, Math.max(6000, part.text.length * 95 + 4000));=
+    watchdog = setTimeout(() => { if (!advanced && !cancelled) go(); }, Math.max(6000, part.text.length * 95 + 4000));
     cur = u; pinned.add(u);
     speechSynthesis.speak(u);
   };
