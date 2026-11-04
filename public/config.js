@@ -35,8 +35,8 @@ export const CONFIG = {
 
   VOICE: {
     LANG: 'id-ID',
-    PITCH: 1.06,                // nyaris alami; pitch tinggi membuat suara terdengar kaku/robot
-    RATE: 0.98,
+    PITCH: 1.32,                // dinaikkan agar terdengar imut/manja seperti karakter anime
+    RATE: 1.06,                 // sedikit lebih cepat agar tidak kaku; slider pengguna (0.8–1.25) tetap berlaku
     MAX_SPOKEN_CHARS: 480,      // dibacakan utuh per kalimat, tidak dipotong di tengah
   },
 
